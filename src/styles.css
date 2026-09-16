@@ -80,6 +80,10 @@ button span {
   align-items: end;
   padding: 9vw 0 11vw;
 }
+.manifesto-copy,
+.manifesto-image {
+  min-width: 0;
+}
 .eyebrow,
 .section-label {
   color: var(--muted);
@@ -91,7 +95,7 @@ p {
   margin-top: 0;
 }
 h1 {
-  font-size: clamp(4.5rem, 10vw, 9.8rem);
+  font-size: clamp(4rem, 6.5vw, 7.5rem);
   line-height: 0.84;
   letter-spacing: -0.065em;
   font-weight: 600;
@@ -116,7 +120,10 @@ h1 em {
   border-radius: 7px;
   padding: 12px 15px;
   background: #fff;
-  transition: border-color 160ms ease, color 160ms ease, transform 160ms ease;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
 }
 .text-link:hover {
   border-color: var(--accent);
@@ -239,7 +246,9 @@ button {
   padding: 16px 18px;
   cursor: pointer;
   margin-top: 10px;
-  transition: background 160ms ease, transform 160ms ease;
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
 }
 button:hover:not(:disabled) {
   background: var(--accent-strong);
