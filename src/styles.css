@@ -6,9 +6,9 @@
   --paper: #f7f7fb;
   --muted: #70717f;
   --line: #dedee8;
-  --accent: #6d4aff;
-  --accent-strong: #5534e8;
-  --accent-soft: #e9e4ff;
+  --accent: #af65ba;
+  --accent-strong: #9650a2;
+  --accent-soft: #f1e2f3;
   --dark: #29263d;
 }
 
@@ -228,8 +228,8 @@ input {
 }
 input:focus {
   outline: none;
-  border-color: #9b87ff;
-  box-shadow: 0 0 0 3px rgba(109, 74, 255, 0.18);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(175, 101, 186, 0.18);
 }
 input::placeholder {
   color: #777970;
