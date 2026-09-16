@@ -4,94 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sign Up</title>
-    <style>
-      :root {
-        color-scheme: light dark;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-          Arial, sans-serif;
-        background: #0b0b0f;
-        color: #f5f5f7;
-        padding: 24px;
-      }
-      .card {
-        width: 100%;
-        max-width: 400px;
-        background: #16161d;
-        border: 1px solid #2a2a33;
-        border-radius: 16px;
-        padding: 32px;
-      }
-      h1 {
-        font-size: 22px;
-        margin: 0 0 8px;
-      }
-      p.sub {
-        color: #9a9aa5;
-        margin: 0 0 24px;
-        font-size: 14px;
-      }
-      label {
-        display: block;
-        font-size: 13px;
-        color: #c7c7d0;
-        margin-bottom: 6px;
-      }
-      input {
-        width: 100%;
-        padding: 12px 14px;
-        margin-bottom: 16px;
-        background: #0e0e13;
-        border: 1px solid #33333d;
-        border-radius: 10px;
-        color: #f5f5f7;
-        font-size: 15px;
-      }
-      input:focus {
-        outline: none;
-        border-color: #6366f1;
-      }
-      button {
-        width: 100%;
-        padding: 13px;
-        border: none;
-        border-radius: 10px;
-        background: #6366f1;
-        color: white;
-        font-size: 15px;
-        font-weight: 600;
-        cursor: pointer;
-      }
-      button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-      button:hover:not(:disabled) {
-        background: #5457d1;
-      }
-      #message {
-        margin-top: 14px;
-        font-size: 14px;
-        text-align: center;
-        min-height: 20px;
-      }
-      .success {
-        color: #4ade80;
-      }
-      .error {
-        color: #f87171;
-      }
-    </style>
+    <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
     <div class="card">
@@ -115,52 +28,6 @@
       </form>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.45.4/dist/umd/supabase.min.js"></script>
-    <script>
-      // ---- CONFIG: replace with your own Supabase project values ----
-      const SUPABASE_URL = "https://ngzmsopdbstapupdhjuv.supabase.co/rest/v1/";
-      const SUPABASE_ANON_KEY =
-        "sb_publishable_-gSxG1Nu5S7kz5yDOqajUw_YIJAYq-c";
-      // -----------------------------------------------------------------
-
-      const supabaseClient = supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY,
-      );
-
-      const form = document.getElementById("signupForm");
-      const messageEl = document.getElementById("message");
-      const submitBtn = document.getElementById("submitBtn");
-
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const name = document.getElementById("name").value.trim();
-        const email = document.getElementById("email").value.trim();
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = "Signing up...";
-        messageEl.textContent = "";
-        messageEl.className = "";
-
-        const { error } = await supabaseClient
-          .from("signups")
-          .insert([{ name, email }]);
-
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Sign Up";
-
-        if (error) {
-          messageEl.textContent =
-            error.code === "23505"
-              ? "That email is already signed up."
-              : "Something went wrong. Please try again.";
-          messageEl.className = "error";
-        } else {
-          messageEl.textContent = "You're signed up! 🎉";
-          messageEl.className = "success";
-          form.reset();
-        }
-      });
-    </script>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
