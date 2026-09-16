@@ -1,6 +1,6 @@
-# Contribution Signup
+# Contribution
 
-A small Vite + TypeScript signup form backed by Supabase.
+A Vite + TypeScript manifesto homepage with an image-led story and a Supabase-backed signup form.
 
 ## Set up Supabase
 
@@ -53,6 +53,7 @@ git push
 ## Verify it works
 
 - Open your live URL, submit the form with a test name/email.
+- The dedicated signup page is available at `/signup.html`.
 - In Supabase, go to **Table Editor → signups** — you should see the row appear.
 
 ## View your signups anytime
