@@ -75,8 +75,8 @@ button span {
 
 .manifesto {
   display: grid;
-  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
-  gap: 8vw;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 6vw;
   align-items: end;
   padding: 9vw 0 11vw;
 }
@@ -95,7 +95,8 @@ p {
   margin-top: 0;
 }
 h1 {
-  font-size: clamp(4rem, 6.5vw, 7.5rem);
+  max-width: 100%;
+  font-size: clamp(3.5rem, 4.8vw, 6.5rem);
   line-height: 0.84;
   letter-spacing: -0.065em;
   font-weight: 600;
