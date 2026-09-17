@@ -306,6 +306,148 @@ footer {
   box-shadow: 0 14px 36px rgba(54, 47, 99, 0.08);
 }
 
+.reporting-header {
+  padding: 8vw 0 5vw;
+}
+.reporting-header h1 {
+  margin-bottom: 0;
+}
+.reporting-banner {
+  margin: 0 0 8vw;
+}
+.reporting-banner img {
+  display: block;
+  width: 100%;
+  height: clamp(150px, 21vw, 280px);
+  object-fit: cover;
+  object-position: center 58%;
+  border-radius: 12px;
+  filter: saturate(0.72);
+}
+.reporting-tool {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.3fr);
+  gap: 8vw;
+  border-top: 1px solid var(--line);
+  padding: 32px 0 10vw;
+}
+.reporting-intro h2 {
+  font-size: clamp(2.8rem, 5vw, 5.8rem);
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+  font-weight: 600;
+  margin: 0 0 24px;
+}
+.reporting-intro > p:last-child {
+  max-width: 260px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.report-form {
+  display: grid;
+  gap: 26px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: clamp(22px, 4vw, 42px);
+  box-shadow: 0 14px 36px rgba(54, 47, 99, 0.06);
+}
+.field-group {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.field-group label,
+.field-group legend {
+  color: var(--ink);
+  font-family: "Manrope", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.field-help {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.report-form textarea,
+.report-form input[type="date"],
+.report-form .task-title,
+.report-form .task-minutes {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 13px 14px;
+  font: inherit;
+  font-size: 15px;
+  resize: vertical;
+}
+.report-form textarea:focus,
+.report-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(175, 101, 186, 0.14);
+}
+.task-group {
+  gap: 8px;
+}
+.task-list {
+  display: grid;
+  gap: 10px;
+}
+.task-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px auto 32px;
+  gap: 8px;
+  align-items: center;
+}
+.task-row .task-minutes {
+  text-align: right;
+}
+.minutes-label {
+  color: var(--muted);
+  font-size: 13px;
+}
+.remove-task {
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  justify-content: center;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+}
+.remove-task:hover:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.secondary-button {
+  width: fit-content;
+  margin: 4px 0 0;
+  padding: 10px 13px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border: 1px solid transparent;
+}
+.secondary-button:hover:not(:disabled) {
+  background: #e8d3eb;
+}
+.report-form > button[type="submit"] {
+  margin-top: 6px;
+}
+#reportMessage {
+  min-height: 20px;
+  margin-top: -12px;
+  font-size: 13px;
+}
+
 @media (max-width: 720px) {
   main {
     padding: 0 22px;
@@ -341,6 +483,17 @@ footer {
   .signup-form {
     justify-self: stretch;
     width: 100%;
+  }
+  .reporting-header {
+    padding: 72px 0 44px;
+  }
+  .reporting-tool {
+    grid-template-columns: 1fr;
+    gap: 44px;
+    padding-bottom: 72px;
+  }
+  .task-row {
+    grid-template-columns: minmax(0, 1fr) 78px auto 32px;
   }
   footer {
     gap: 20px;

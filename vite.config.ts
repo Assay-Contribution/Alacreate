@@ -7,6 +7,7 @@ export default defineConfig({
       input: {
         home: resolve(__dirname, "index.html"),
         signup: resolve(__dirname, "signup.html"),
+        reporting: resolve(__dirname, "reporting.html"),
       },
     },
   },
