@@ -361,6 +361,49 @@ footer {
   padding: 30px;
   box-shadow: 0 14px 36px rgba(54, 47, 99, 0.08);
 }
+.auth-heading h2 {
+  margin: 0 0 8px;
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
+}
+.auth-heading p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 22px;
+}
+.auth-switch {
+  margin-top: 12px;
+  padding: 10px 0;
+  background: transparent;
+  color: var(--accent-strong);
+  font-size: 10px;
+}
+.auth-switch:hover:not(:disabled) {
+  background: transparent;
+  color: var(--accent);
+  transform: none;
+}
+.reporting-header {
+  position: relative;
+}
+.reporting-session {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.session-button {
+  width: auto;
+  margin: 0;
+  padding: 9px 12px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.session-button:hover:not(:disabled) {
+  background: #e8d3eb;
+}
 
 .reporting-header {
   padding: 8vw 0 5vw;

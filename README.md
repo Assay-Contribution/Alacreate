@@ -9,7 +9,7 @@ A Vite + TypeScript manifesto homepage with an image-led story and a Supabase-ba
 3. Go to **Project Settings → API** and copy:
    - **Project URL**
    - **anon public** key
-4. In **Authentication → Providers**, enable **Anonymous** so the reporting tool can create a private browser session for each user.
+4. In **Authentication → Providers**, enable **Email**. Configure email confirmation and redirect URLs for your deployed domain.
 
 ## Run locally
 
@@ -56,9 +56,10 @@ git push
 - Open your live URL, submit the form with a test name/email.
 - The dedicated signup page is available at `/signup.html`.
 - The daily contribution reporting tool is available at `/reporting.html`.
+- Create an account or sign in at `/signup.html`; authenticated reports persist across devices.
 - In Supabase, go to **Table Editor → signups** — you should see the row appear.
 
-Reports are stored in the `contribution_reports` table with one record per user per day. The `next_steps` column stores each task and its estimated minutes as JSONB, while Supabase Row Level Security prevents users from reading or editing another user's reports.
+Reports are stored in the `contribution_reports` table with one record per authenticated user per day. The `next_steps` column stores each task and its estimated minutes as JSONB, while Supabase Row Level Security prevents users from reading or editing another user's reports.
 
 ## View your signups anytime
 

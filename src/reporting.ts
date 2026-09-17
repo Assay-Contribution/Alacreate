@@ -19,6 +19,9 @@ const submitButton = document.querySelector<HTMLButtonElement>(
   "#reportSubmitButton",
 );
 const message = document.querySelector<HTMLDivElement>("#reportMessage");
+const sessionEmail = document.querySelector<HTMLSpanElement>("#sessionEmail");
+const signOutButton =
+  document.querySelector<HTMLButtonElement>("#signOutButton");
 
 if (
   reportForm &&
@@ -26,8 +29,17 @@ if (
   taskList &&
   addTaskButton &&
   submitButton &&
-  message
+  message &&
+  sessionEmail &&
+  signOutButton
 ) {
+  if (!supabaseClient) {
+    message.textContent = "Reporting is not configured yet.";
+    message.className = "error";
+  }
+
+  const authenticatedClient = supabaseClient;
+
   reportDate.value = new Date().toISOString().slice(0, 10);
 
   const addTask = (task: ReportTask = { title: "", minutes: 30 }) => {
@@ -83,7 +95,7 @@ if (
       return;
     }
 
-    if (!supabaseClient) {
+    if (!authenticatedClient) {
       message.textContent = "Reporting is not configured yet.";
       message.className = "error";
       return;
@@ -94,29 +106,31 @@ if (
     message.textContent = "";
     message.className = "";
 
-    const { data: authData, error: authError } =
-      await supabaseClient.auth.signInAnonymously();
-    if (authError || !authData.user) {
+    const { data: sessionData, error: sessionError } =
+      await authenticatedClient.auth.getSession();
+    if (sessionError || !sessionData.session?.user) {
       showError(
-        "Unable to establish a reporting session. Enable Anonymous Auth in Supabase.",
+        "Sign in to save reports across devices.",
         submitButton,
         message,
       );
       return;
     }
 
-    const { error } = await supabaseClient.from("contribution_reports").upsert(
-      {
-        user_id: authData.user.id,
-        report_date: reportDate.value,
-        north_star: getValue("northStar"),
-        next_steps: tasks,
-        morning_report: getValue("morningReport") || null,
-        midday_report: getValue("middayReport") || null,
-        final_report: getValue("finalReport") || null,
-      },
-      { onConflict: "user_id,report_date" },
-    );
+    const { error } = await authenticatedClient
+      .from("contribution_reports")
+      .upsert(
+        {
+          user_id: sessionData.session.user.id,
+          report_date: reportDate.value,
+          north_star: getValue("northStar"),
+          next_steps: tasks,
+          morning_report: getValue("morningReport") || null,
+          midday_report: getValue("middayReport") || null,
+          final_report: getValue("finalReport") || null,
+        },
+        { onConflict: "user_id,report_date" },
+      );
 
     if (error) {
       showError(
@@ -131,6 +145,23 @@ if (
     submitButton.innerHTML = 'Report saved <span aria-hidden="true">✓</span>';
     message.textContent = "Today's contribution has been recorded.";
     message.className = "success";
+  });
+
+  authenticatedClient?.auth.getSession().then(({ data }) => {
+    if (!data.session) {
+      sessionEmail.textContent = "No account signed in";
+      submitButton.disabled = true;
+      message.textContent = "Sign in to save reports across devices.";
+      message.className = "error";
+      return;
+    }
+    sessionEmail.textContent = data.session.user.email ?? "Signed in";
+  });
+
+  signOutButton.addEventListener("click", async () => {
+    if (!authenticatedClient) return;
+    await authenticatedClient.auth.signOut();
+    window.location.href = "/signup.html?mode=login";
   });
 }
 

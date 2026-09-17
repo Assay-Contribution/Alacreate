@@ -18,8 +18,8 @@ to anon
 with check (true);
 
 -- Daily contribution reports are linked to Supabase Auth users.
--- Enable Authentication > Providers > Anonymous in the Supabase dashboard
--- before using the reporting page.
+-- Enable email/password sign-ins in the Supabase dashboard before using
+-- the reporting page. Configure email confirmation to match your workflow.
 create table contribution_reports (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
