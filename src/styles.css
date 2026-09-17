@@ -530,7 +530,9 @@ footer {
     opacity: 0;
     pointer-events: none;
     transform: translateY(-8px);
-    transition: opacity 160ms ease, transform 160ms ease;
+    transition:
+      opacity 160ms ease,
+      transform 160ms ease;
   }
   .site-menu.is-open {
     opacity: 1;
