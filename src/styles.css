@@ -31,11 +31,67 @@ main {
 }
 
 .site-nav {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 28px 0;
   border-bottom: 1px solid var(--line);
+}
+.site-menu {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.site-menu .nav-link {
+  position: relative;
+  padding: 8px 0;
+}
+.site-menu .nav-link.active {
+  color: var(--accent-strong);
+}
+.site-menu .nav-link.active::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.menu-toggle {
+  display: none;
+  width: auto;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 8px 0;
+  background: transparent;
+  color: var(--ink);
+}
+.menu-toggle:hover:not(:disabled) {
+  background: transparent;
+  color: var(--accent-strong);
+  transform: none;
+}
+.menu-icon {
+  display: grid;
+  gap: 4px;
+}
+.menu-icon i {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: transform 160ms ease;
+}
+.menu-toggle[aria-expanded="true"] .menu-icon i:first-child {
+  transform: translateY(3px) rotate(45deg);
+}
+.menu-toggle[aria-expanded="true"] .menu-icon i:last-child {
+  transform: translateY(-3px) rotate(-45deg);
 }
 .wordmark,
 .nav-link,
@@ -451,6 +507,42 @@ footer {
 @media (max-width: 720px) {
   main {
     padding: 0 22px;
+  }
+  .site-nav {
+    padding: 22px 0;
+  }
+  .menu-toggle {
+    display: flex;
+  }
+  .site-menu {
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 1px);
+    right: 0;
+    left: 0;
+    display: grid;
+    gap: 0;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 0 0 10px 10px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 14px 30px rgba(54, 47, 99, 0.1);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+  .site-menu.is-open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  .site-menu .nav-link {
+    padding: 14px 12px;
+  }
+  .site-menu .nav-link.active::after {
+    right: 12px;
+    left: 12px;
   }
   .manifesto {
     grid-template-columns: 1fr;

@@ -14,7 +14,15 @@
     <main>
       <nav class="site-nav" aria-label="Main navigation">
         <a class="wordmark" href="/">CONTRIBUTE<span>.</span></a>
-        <a class="nav-link" href="/">Back to manifesto <span aria-hidden="true">↗</span></a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-menu">
+          <span class="menu-label">Menu</span>
+          <span class="menu-icon" aria-hidden="true"><i></i><i></i></span>
+        </button>
+        <div class="site-menu" id="site-menu">
+          <a class="nav-link" href="/">Manifesto</a>
+          <a class="nav-link active" href="/reporting.html">Reporting</a>
+          <a class="nav-link" href="/signup.html">Sign up <span aria-hidden="true">↗</span></a>
+        </div>
       </nav>
 
       <header class="reporting-header">
@@ -27,14 +35,18 @@
           src="/images/contribute_manifesto.jpg"
           alt="A gold-spiraled notebook prepared for reflection and planning"
         />
-        <figcaption><span>01</span> Make the invisible work visible.</figcaption>
+        <figcaption>
+          <span>01</span> Make the invisible work visible.
+        </figcaption>
       </figure>
 
       <section class="reporting-tool" aria-labelledby="reporting-tool-title">
         <div class="reporting-intro">
           <p class="section-label">Today's account</p>
           <h2 id="reporting-tool-title">Give your day<br />a direction.</h2>
-          <p>Save one clear record of what matters, what moved, and what remains.</p>
+          <p>
+            Save one clear record of what matters, what moved, and what remains.
+          </p>
         </div>
 
         <form id="reportForm" class="report-form">
@@ -45,34 +57,62 @@
 
           <div class="field-group">
             <label for="northStar">01 / North Star</label>
-            <span class="field-help">What's the most important thing to work towards?</span>
-            <textarea id="northStar" rows="3" required placeholder="The outcome that would make today meaningful..."></textarea>
+            <span class="field-help"
+              >What's the most important thing to work towards?</span
+            >
+            <textarea
+              id="northStar"
+              rows="3"
+              required
+              placeholder="The outcome that would make today meaningful..."
+            ></textarea>
           </div>
 
           <fieldset class="field-group task-group">
             <legend>02 / Next steps</legend>
-            <span class="field-help">Add 3–5 key tasks and estimate the time each will take.</span>
+            <span class="field-help"
+              >Add 3–5 key tasks and estimate the time each will take.</span
+            >
             <div id="taskList"></div>
-            <button class="secondary-button" type="button" id="addTaskButton">+ Add task</button>
+            <button class="secondary-button" type="button" id="addTaskButton">
+              + Add task
+            </button>
           </fieldset>
 
           <div class="field-group">
             <label for="morningReport">03 / Morning report</label>
-            <textarea id="morningReport" rows="4" placeholder="What is your intention for the day?"></textarea>
+            <textarea
+              id="morningReport"
+              rows="4"
+              placeholder="What is your intention for the day?"
+            ></textarea>
           </div>
 
           <div class="field-group">
             <label for="middayReport">04 / Mid-day report</label>
-            <textarea id="middayReport" rows="4" placeholder="What has moved forward? What needs your attention?"></textarea>
+            <textarea
+              id="middayReport"
+              rows="4"
+              placeholder="What has moved forward? What needs your attention?"
+            ></textarea>
           </div>
 
           <div class="field-group">
             <label for="finalReport">05 / Final progress report</label>
-            <span class="field-help">What did you contribute, and where will you hold yourself accountable next?</span>
-            <textarea id="finalReport" rows="5" placeholder="Close the loop on today's work..."></textarea>
+            <span class="field-help"
+              >What did you contribute, and where will you hold yourself
+              accountable next?</span
+            >
+            <textarea
+              id="finalReport"
+              rows="5"
+              placeholder="Close the loop on today's work..."
+            ></textarea>
           </div>
 
-          <button type="submit" id="reportSubmitButton">Save today's report <span aria-hidden="true">↗</span></button>
+          <button type="submit" id="reportSubmitButton">
+            Save today's report <span aria-hidden="true">↗</span>
+          </button>
           <div id="reportMessage" role="status" aria-live="polite"></div>
         </form>
       </section>
@@ -84,5 +124,6 @@
     </main>
 
     <script type="module" src="/src/reporting.ts"></script>
+    <script type="module" src="/src/nav.ts"></script>
   </body>
 </html>
