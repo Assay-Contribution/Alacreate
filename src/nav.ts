@@ -1,3 +1,7 @@
+import { inject } from "@vercel/analytics";
+
+inject();
+
 const menuToggle = document.querySelector<HTMLButtonElement>(".menu-toggle");
 const siteMenu = document.querySelector<HTMLDivElement>(".site-menu");
 
