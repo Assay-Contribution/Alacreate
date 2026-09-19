@@ -499,10 +499,6 @@ footer {
 .task-group {
   gap: 8px;
 }
-.task-list {
-  display: grid;
-  gap: 10px;
-}
 .task-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 92px auto 32px;

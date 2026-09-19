@@ -1,14 +1,6 @@
-import "./styles.css";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseClient } from "./supabase";
 
 type ReportTask = { title: string; minutes: number };
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabaseClient =
-  supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : null;
 
 const reportForm = document.querySelector<HTMLFormElement>("#reportForm");
 const reportDate = document.querySelector<HTMLInputElement>("#reportDate");
