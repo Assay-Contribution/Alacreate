@@ -32,11 +32,6 @@ if (
     switchButton.textContent = "Need an account? Create one";
   }
 
-  if (!supabaseClient) {
-    submitButton.disabled = true;
-    switchButton.disabled = true;
-  }
-
   switchButton.addEventListener("click", () => {
     isSignInMode = !isSignInMode;
     authTitle.textContent = isSignInMode
@@ -57,7 +52,11 @@ if (
 
   authForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (!supabaseClient) return;
+    if (!supabaseClient) {
+      message.textContent = "Authentication is not configured yet.";
+      message.className = "error";
+      return;
+    }
 
     submitButton.disabled = true;
     switchButton.disabled = true;
