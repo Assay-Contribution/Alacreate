@@ -44,10 +44,6 @@ if (
   if (!supabaseClient) {
     submitButton.disabled = true;
     switchButton.disabled = true;
-    message.textContent = normalizedSupabaseUrl
-      ? "Authentication is not configured yet."
-      : "Use your Supabase Project URL, such as https://your-project.supabase.co.";
-    message.className = "error";
   }
 
   switchButton.addEventListener("click", () => {
