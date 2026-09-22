@@ -150,3 +150,22 @@ From [team_docs/competitive-landscape.md](competitive-landscape.md): the product
 9. Stay cheap and low-friction to adopt — no heavy procurement, security review, or admin setup.
 10. Provide an honest, auditable answer for billing/payroll/hourly-reporting needs as a secondary capability, not the core loop.
 11. Never equate raw activity volume (commits, tickets, hours) with value, and never feel like surveillance/time theater.
+12. Ideally this software should encourage users to be higly effective through methods found from psycology or high performance environments
+
+## Other thoughts:
+
+People generally enjoy what they are doing and are competetive about what they do if they compare themselves against another person who is within 10% to 15% of their skill level. It could be a good idea to have the program find an "accountability partner" who is within that 10% threshold so that these two employees can compete against each other to boost productivity.  
+
+People perform better when they know they are being watched by someone else. It may be a good idea to have their progress be optionally shared with the accountability partner so that the partner can judge how well that person is doing.
+
+It may be a good idea to have an LLM or some kind of AI motiviate the person with a list of things they have accomplished and improved on with potential occasional suggestions on how to keep improving
+
+It may be good to have a button that will organize tasks from smallest to largest or train a custom AI model that ingests the time a task takes, what the task is, ect. and learns the order those tasks should be in to be the most productive
+
+Higher performers focous more on a daily routine instead of an end goal. This could also be something that this app integrates.
+
+It might be good to add in the beginning when a user first makes an account with the app something that says "This app is to help you achieve your goals. Initially you will start strong and do well, however, things will get harder. If you want to siginificantly improve yourself over the long run, you have must not quit"
+
+I personally think the most likely idea to succeed to make an environment that is competetive, but also fun. It would also be cool if you got a soda or some reward from outperforming your accountability partener that day or week
+
+Canvas has a calandar of things to do, when certain things get done, that shows up as done. Similarly, workers can add things to the calendar, the number of things accomplished can guage productivity
