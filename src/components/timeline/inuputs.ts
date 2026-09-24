@@ -91,14 +91,15 @@ export function renderComposer(options: ComposerOptions): void {
     const text = textInput.value.trim();
     if (!text && pendingLinks.length === 0 && pendingFiles.length === 0) return;
 
-    submitButton.disabled = true;
-    await onSubmit({ text, links: [...pendingLinks], files: [...pendingFiles] });
-    submitButton.disabled = false;
-
+    // Clear right away so the next note can be typed while this one saves (and the AI
+    // replies, which can take a few seconds). An empty box also blocks double submits.
+    const submission = { text, links: [...pendingLinks], files: [...pendingFiles] };
     textInput.value = "";
     pendingLinks.length = 0;
     pendingFiles.length = 0;
     renderChips();
+
+    await onSubmit(submission);
   });
 
   textInput.addEventListener("keydown", (event) => {

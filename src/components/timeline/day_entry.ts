@@ -7,6 +7,9 @@ import { escapeHtml, fileSizeLabel, formatFullDayLabel } from "./format";
 import { summarizeDay } from "../../ai/frontend/summarize";
 import { userNotes, type DayEntry, type FileAttachment, type NoteEntry } from "./types";
 
+const READY_MARK =
+  '<span class="file-chip-ready" title="Ready for AI search" aria-label="Ready for AI search">✓</span>';
+
 export type DayEntryOptions = {
   entry: DayEntry;
   isEditable: boolean;
@@ -15,6 +18,8 @@ export type DayEntryOptions = {
   onDeleteFile: (date: string, file: FileAttachment) => Promise<void> | void;
   onEditNote: (date: string, note: NoteEntry, newText: string) => Promise<void> | void;
   onDeleteNote: (date: string, note: NoteEntry) => Promise<void> | void;
+  // Whether a file has finished processing for AI search; ready files get a checkmark.
+  isFileReady?: (file: FileAttachment) => boolean;
 };
 
 export function renderDayEntry(options: DayEntryOptions): HTMLElement {
@@ -26,6 +31,7 @@ export function renderDayEntry(options: DayEntryOptions): HTMLElement {
     onDeleteFile,
     onEditNote,
     onDeleteNote,
+    isFileReady = () => false,
   } = options;
 
   const section = document.createElement("section");
@@ -62,7 +68,7 @@ export function renderDayEntry(options: DayEntryOptions): HTMLElement {
     });
 
     if (entry.links.length > 0) preview.append(renderLinkChips(entry.links.slice(-3)));
-    if (entry.files.length > 0) preview.append(renderFileChips(entry.files.slice(-3)));
+    if (entry.files.length > 0) preview.append(renderFileChips(entry.files.slice(-3), isFileReady));
   } else {
     const empty = document.createElement("p");
     empty.className = "day-entry-empty";
@@ -107,6 +113,7 @@ export function renderDayEntry(options: DayEntryOptions): HTMLElement {
       wrapper.append(
         renderActivityFeed(
           entry,
+          isFileReady,
           isEditable
             ? {
                 onDeleteFile: (file) => confirmDeleteFile(entry.date, file),
@@ -219,7 +226,11 @@ type ActivityActions = {
   onDeleteNote: (note: NoteEntry) => void;
 };
 
-function renderActivityFeed(entry: DayEntry, actions?: ActivityActions): HTMLElement {
+function renderActivityFeed(
+  entry: DayEntry,
+  isFileReady: (file: FileAttachment) => boolean,
+  actions?: ActivityActions,
+): HTMLElement {
   const items: ActivityItem[] = [
     ...entry.notes.map((note): ActivityItem => ({
       type: "note",
@@ -341,6 +352,7 @@ function renderActivityFeed(entry: DayEntry, actions?: ActivityActions): HTMLEle
         <span class="file-chip-icon" aria-hidden="true">📄</span>
         <span class="file-chip-name">${escapeHtml(file.name)}</span>
         <span class="file-chip-size">${escapeHtml(fileSizeLabel(file.size))}</span>
+        ${isFileReady(file) ? READY_MARK : ""}
       `;
       listItem.append(anchor);
 
@@ -432,6 +444,7 @@ function renderLinkChips(links: DayEntry["links"]): HTMLElement {
 
 function renderFileChips(
   files: FileAttachment[],
+  isFileReady: (file: FileAttachment) => boolean,
   onDelete?: (file: FileAttachment) => void,
 ): HTMLElement {
   const row = document.createElement("div");
@@ -449,6 +462,7 @@ function renderFileChips(
       <span class="file-chip-icon" aria-hidden="true">📄</span>
       <span class="file-chip-name">${escapeHtml(file.name)}</span>
       <span class="file-chip-size">${escapeHtml(fileSizeLabel(file.size))}</span>
+      ${isFileReady(file) ? READY_MARK : ""}
     `;
     wrap.append(anchor);
 

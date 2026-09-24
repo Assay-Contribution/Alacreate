@@ -12,6 +12,7 @@
 */
 import { supabaseClient } from "../../supabase";
 import { askAssistant } from "../../ai/frontend/assistant";
+import { deleteFileFromSearch, getReadyFiles, processUploadedFile } from "../../ai/frontend/files";
 import { renderDayEntry } from "./day_entry";
 import { formatFullDayLabel, localIsoDate } from "./format";
 import { renderComposer } from "./inuputs";
@@ -70,6 +71,10 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
   }
 
   const entries = await loadEntries(userId);
+  // Storage paths of files that are processed and ready for AI search (shown with a ✓).
+  const readyFiles = await getReadyFiles(
+    Array.from(entries.values()).flatMap((entry) => entry.files.map((file) => file.path)),
+  );
   const today = localIsoDate();
   if (!entries.has(today)) entries.set(today, createEmptyDayEntry(today));
 
@@ -125,6 +130,11 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
         size: file.size,
         addedAt: new Date().toISOString(),
       });
+      void processUploadedFile(path, file.size).then((ready) => {
+        if (!ready) return;
+        readyFiles.add(path);
+        rerenderDay(date);
+      });
     }
 
     if (uploaded.length === 0) return;
@@ -143,6 +153,8 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
       showError(`Couldn't delete ${file.name}: ${error.message}`);
       return;
     }
+    await deleteFileFromSearch(file.path);
+    readyFiles.delete(file.path);
 
     entry.files = entry.files.filter((existing) => existing.path !== file.path);
     await persistEntry(entry);
@@ -171,6 +183,7 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
     renderDayEntry({
       entry,
       isEditable: entry.date === today,
+      isFileReady: (file) => readyFiles.has(file.path),
       isExpanded,
       onUploadFiles: uploadFiles,
       onDeleteFile: deleteFile,

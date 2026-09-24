@@ -2,11 +2,13 @@ import { defineConfig, loadEnv, type Plugin } from "vite";
 import { resolve } from "node:path";
 import { handleAssistant } from "./src/ai/assistant.server";
 import type { Handler } from "./src/ai/openai.server";
+import { handleProcessUpload } from "./src/ai/process_file.server";
 import { handleSummarize } from "./src/ai/summarize.server";
 
 const DEV_ROUTES: Record<string, Handler> = {
   "/api/summarize": handleSummarize,
   "/api/assistant": handleAssistant,
+  "/api/process-file": handleProcessUpload,
 };
 
 export default defineConfig(({ mode }) => {
@@ -46,7 +48,7 @@ function devApi(): Plugin {
             headers: req.headers as Record<string, string>,
             body: req.method === "POST" ? Buffer.concat(chunks) : undefined,
           });
-          const response = await handler(request, { requireAuth: false });
+          const response = await handler(request, { requireAuth: false, debug: true });
 
           res.statusCode = response.status;
           res.setHeader("content-type", "application/json");

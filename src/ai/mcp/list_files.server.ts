@@ -1,9 +1,10 @@
-/*  list_files tool: tells the AI which files the user uploaded on a day, a peek at what
-    each one says, and the conversation around each upload. Server-only.
+/*  list_files tool: tells the AI which files the user uploaded on a day, each file's id
+    and whether it can be searched with query_file, a peek at what each one says, and the
+    conversation around each upload. Server-only.
     Supported previews for now: PDFs and text files. Images (screenshots) are listed
     without a preview. */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getDocumentProxy } from "unpdf";
+import { extractPages, fileKind, words, type FileKind } from "../extract_text.server";
 
 const STORAGE_BUCKET = "report-attachments";
 const CONTEXT_WINDOW_MS = 10 * 60 * 1000;
@@ -11,17 +12,15 @@ const PREVIEW_WORDS = 5;
 const MAX_PREVIEW_BYTES = 15 * 1024 * 1024;
 const MAX_MESSAGE_CHARS = 300;
 
-const TEXT_EXTENSIONS = ["txt", "md", "csv", "json", "log"];
-const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp"];
-
 // Tool definition in the format OpenAI function calling expects.
 export const LIST_FILES_TOOL = {
   type: "function",
   function: {
     name: "list_files",
     description:
-      "List the files the user uploaded on a given day, with each file's id, a short " +
-      "preview of its contents, and the messages sent within 10 minutes of the upload.",
+      "List the files the user uploaded on a given day, with each file's id, whether it " +
+      "can be searched with query_file, a short preview of its contents, and the messages " +
+      "sent within 10 minutes of the upload.",
     parameters: {
       type: "object",
       properties: {
@@ -36,11 +35,21 @@ export const LIST_FILES_TOOL = {
 type StoredFile = { name: string; path: string; size: number; addedAt: string };
 type StoredNote = { text: string; addedAt: string; author?: "assistant" };
 
-type FileKind = "pdf" | "text" | "image" | "other";
+// A file's row in the `files` table, if it has been processed for search.
+export type FileRecordInfo = {
+  id: string;
+  status: "pending" | "processing" | "ready" | "unsupported" | "failed";
+  error: string | null;
+  chunkCount: number | null;
+  // Text of the first stored section, so previews don't need to download the file.
+  opening: string | null;
+};
 
 // Where list_files reads from. The Supabase version is below; tests can pass their own.
 export type FileSource = {
   getDay(date: string): Promise<{ files: StoredFile[]; notes: StoredNote[] } | null>;
+  // Looks up the `files` rows for these storage paths, keyed by path.
+  getRecords(paths: string[]): Promise<Map<string, FileRecordInfo>>;
   download(path: string): Promise<Uint8Array | null>;
 };
 
@@ -63,6 +72,33 @@ export function supabaseFileSource(db: SupabaseClient): FileSource {
       if (error || !data) return null;
       return { files: data.files ?? [], notes: data.notes ?? [] };
     },
+    async getRecords(paths) {
+      const records = new Map<string, FileRecordInfo>();
+      if (paths.length === 0) return records;
+      const { data: rows } = await db
+        .from("files")
+        .select("id, path, status, error, chunk_count")
+        .in("path", paths);
+      if (!rows || rows.length === 0) return records;
+
+      const { data: openings } = await db
+        .from("file_chunks")
+        .select("file_id, content")
+        .in("file_id", rows.map((row) => row.id))
+        .eq("chunk_index", 0);
+      const openingByFile = new Map((openings ?? []).map((row) => [row.file_id, row.content]));
+
+      rows.forEach((row) =>
+        records.set(row.path, {
+          id: row.id,
+          status: row.status,
+          error: row.error,
+          chunkCount: row.chunk_count,
+          opening: openingByFile.get(row.id) ?? null,
+        }),
+      );
+      return records;
+    },
     async download(path) {
       const { data } = await db.storage.from(STORAGE_BUCKET).download(path);
       if (data) return new Uint8Array(await data.arrayBuffer());
@@ -84,15 +120,20 @@ export async function listFiles(source: FileSource, options: ListFilesOptions): 
   if (!day || day.files.length === 0) return `No files were uploaded on ${date}.`;
 
   const files = [...day.files].sort((a, b) => time(a.addedAt) - time(b.addedAt));
+  const records = await source.getRecords(files.map((file) => file.path));
   const sections = await Promise.all(
     files.map(async (file) => {
       const kind = fileKind(file.name);
+      const record = records.get(file.path);
       const lines = [
-        `[${file.path}] ${file.name} · ${kindLabel(kind)} · ${sizeLabel(file.size)} · ` +
-          clockTime(file.addedAt, timeZone),
+        `[${record?.id ?? "no id yet"}] ${file.name} · ${kindLabel(kind)} · ` +
+          `${sizeLabel(file.size)} · ${clockTime(file.addedAt, timeZone)}`,
+        `  Search: ${searchStatus(record)}`,
       ];
 
-      const preview = await previewFile(source, file, kind);
+      const preview = record?.opening
+        ? `"${words(record.opening).slice(0, PREVIEW_WORDS).join(" ")}…"`
+        : await previewFile(source, file, kind);
       if (preview) lines.push(`  Starts with: ${preview}`);
 
       const nearby = day.notes
@@ -115,7 +156,7 @@ export async function listFiles(source: FileSource, options: ListFilesOptions): 
   return [
     `Files on ${date} (${files.length}):`,
     ...sections,
-    "To read a file, call read_file with its id (the part in brackets).",
+    "To search a file's contents, call query_file with its id (the part in brackets).",
   ].join("\n\n");
 }
 
@@ -132,43 +173,34 @@ async function previewFile(
   if (!bytes) return "(could not be opened)";
 
   try {
-    const text = kind === "pdf" ? await pdfOpeningText(bytes) : new TextDecoder().decode(bytes);
-    const words = previewWords(text);
-    if (words.length === 0) {
+    // Reads pages only until there are enough words, so large PDFs stay cheap.
+    const pages = await extractPages(bytes, kind, {
+      stopWhen: (read) => words(read.join(" ")).length >= PREVIEW_WORDS,
+    });
+    const opening = words(pages.join(" ")).slice(0, PREVIEW_WORDS);
+    if (opening.length === 0) {
       return kind === "pdf" ? "(no readable text; it may be a scanned image)" : "(empty file)";
     }
-    return `"${words.join(" ")}…"`;
+    return `"${opening.join(" ")}…"`;
   } catch {
     return "(could not be read)";
   }
 }
 
-// Reads pages only until there are enough words, so large PDFs stay cheap.
-async function pdfOpeningText(bytes: Uint8Array): Promise<string> {
-  const pdf = await getDocumentProxy(bytes);
-  let text = "";
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-    const content = await (await pdf.getPage(pageNumber)).getTextContent();
-    text += " " + content.items.map((item) => ("str" in item ? item.str : "")).join(" ");
-    if (previewWords(text).length >= PREVIEW_WORDS) break;
+function searchStatus(record: FileRecordInfo | undefined): string {
+  if (!record) {
+    return "can't be searched: it has never been processed (uploads aren't processed " +
+      "automatically yet), so waiting won't help";
   }
-  return text;
-}
-
-// Words that contain a letter or number, so bullets and dashes don't count toward the five.
-function previewWords(text: string): string[] {
-  return text
-    .split(/\s+/)
-    .filter((word) => /[\p{L}\p{N}]/u.test(word))
-    .slice(0, PREVIEW_WORDS);
-}
-
-function fileKind(name: string): FileKind {
-  const extension = name.split(".").pop()?.toLowerCase() ?? "";
-  if (extension === "pdf") return "pdf";
-  if (TEXT_EXTENSIONS.includes(extension)) return "text";
-  if (IMAGE_EXTENSIONS.includes(extension)) return "image";
-  return "other";
+  switch (record.status) {
+    case "ready":
+      return `ready (${record.chunkCount} sections), use query_file`;
+    case "pending":
+    case "processing":
+      return "being processed, try again in a minute";
+    default:
+      return `can't be searched: ${record.error ?? record.status}`;
+  }
 }
 
 function kindLabel(kind: FileKind): string {

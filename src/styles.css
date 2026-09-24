@@ -1015,6 +1015,15 @@ footer {
   color: var(--muted);
   font-size: 0.85rem;
 }
+.file-chip-ready {
+  color: #2e9d5b;
+  font-weight: 700;
+  font-size: 0.85em;
+  line-height: 1;
+}
+.timeline-page-root .file-chip-ready {
+  color: #5ee6a0;
+}
 .day-entry-activity-file .file-chip {
   font-size: 0.95rem;
   padding: 8px 14px;
