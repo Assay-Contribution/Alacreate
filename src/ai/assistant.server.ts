@@ -5,20 +5,24 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { LIST_FILES_TOOL, listFiles, supabaseFileSource } from "./mcp/list_files.server";
 import { QUERY_FILE_TOOL, queryFile } from "./mcp/query_file.server";
+import { GET_MESSAGES_TOOL, getMessages, supabaseMessageSource } from "./mcp/get_messages.server";
+import { QUERY_HISTORY_TOOL, queryHistory } from "./mcp/query_history.server";
 import {
-  chatWithTools,
   createUserClient,
   guardRequest,
-  isShortString,
   json,
   readJson,
   type ChatMessage,
   type HandlerOptions,
+  streamChatWithTools,
   type ToolDefinition,
   type ToolRunner,
 } from "./openai.server";
 
 const MAX_MESSAGES = 10;
+// Longer messages are cut down rather than rejected: rejecting would make the AI go
+// silent for as long as one long reply stayed among the recent messages.
+const MAX_MESSAGE_CHARS = 4000;
 const NO_RESPONSE = "NO_RESPONSE";
 
 const BASE_PROMPT =
@@ -33,9 +37,10 @@ const BASE_PROMPT =
   "silent now. If the note is addressed to you, always reply, even when you can't do what " +
   `it asks: say briefly what you can't do. Never use ${NO_RESPONSE} just because a ` +
   "request is hard or impossible. When you do reply, be concise and helpful, and use the " +
-  "earlier notes as context.";
+  "earlier notes as context. Lines starting with \"AI:\" in the earlier notes are your own " +
+  "previous replies; if the user says one was wrong, correct it.";
 
-const FILES_PROMPT =
+const TOOLS_PROMPT =
   "You have two tools for the user's uploaded files. list_files shows the files uploaded " +
   "on a given day: each file's name, id, whether it's ready to search, a short preview, " +
   "and the messages sent around the upload. query_file searches the contents of one file " +
@@ -44,10 +49,17 @@ const FILES_PROMPT =
   "query; call it again with different wording if the first results don't answer it. " +
   "Answer from the returned sections and cite page numbers when they're given. If the " +
   "user doesn't say which day, check today first, then earlier days if needed. If a file " +
-  "isn't ready to search, tell the user and share what list_files shows instead.";
+  "isn't ready to search, tell the user and share what list_files shows instead.\n\n" +
+  "You also have two tools for past messages (the user's notes and your own replies). " +
+  "get_messages returns everything said on a given day, in order; set full_ai_replies " +
+  "to false to shorten your own old replies to two lines when you only need the user's " +
+  "side. query_history searches every day for a topic; use it when you don't know which " +
+  "day something was said. You only see the last few notes of today automatically; use " +
+  "these tools for anything earlier.";
 
-const NO_FILES_PROMPT =
-  "You can't see the user's files right now because they aren't signed in; say so if asked.";
+const NO_TOOLS_PROMPT =
+  "You can't see the user's files or past messages right now because they aren't signed " +
+  "in; say so if asked.";
 
 type AssistantRequest = { history: ChatMessage[]; today: string; timeZone: string };
 
@@ -64,24 +76,72 @@ export async function handleAssistant(
 
   // Tools run as the signed-in user, so they can only ever see that user's files.
   const userDb = createUserClient(request);
-  const tools: ToolDefinition[] = userDb ? [LIST_FILES_TOOL, QUERY_FILE_TOOL] : [];
+  const tools: ToolDefinition[] = userDb
+    ? [
+        LIST_FILES_TOOL,
+        QUERY_FILE_TOOL,
+        GET_MESSAGES_TOOL,
+        QUERY_HISTORY_TOOL,
+      ]
+    : [];
   const system =
     `${BASE_PROMPT}\n\nToday is ${today} (the user's time zone is ${timeZone}).\n\n` +
-    (userDb ? FILES_PROMPT : NO_FILES_PROMPT);
+    (userDb ? TOOLS_PROMPT : NO_TOOLS_PROMPT);
 
   const prompt = buildPrompt(history);
   const log = options.debug ? (line: string) => console.log(`[assistant] ${line}`) : undefined;
   log?.(`prompt:\n${prompt.content}`);
-  const reply = await chatWithTools(
+  const deltas = streamChatWithTools(
     [{ role: "system", content: system }, prompt],
     tools,
     userDb ? toolRunner(userDb, timeZone) : async () => "No tools are available.",
     500,
     log,
   );
-  log?.(`raw model output: ${reply}`);
-  if (reply === null) return json({ error: "Assistant unavailable" }, 502);
-  return json({ reply: reply.includes(NO_RESPONSE) ? null : reply });
+
+  // The reply streams to the browser as plain text. An empty body means the AI stayed
+  // silent (or failed), and the browser shows nothing.
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      let reply = "";
+      try {
+        for await (const text of withoutNoResponse(deltas)) {
+          reply += text;
+          controller.enqueue(encoder.encode(text));
+        }
+      } catch (error) {
+        console.error("[assistant] stream failed", error);
+      }
+      log?.(`reply: ${reply || "(silent)"}`);
+      controller.close();
+    },
+  });
+  return new Response(stream, {
+    headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-cache" },
+  });
+}
+
+// Passes the reply through unless it's the NO_RESPONSE signal. Holds back text only while
+// it could still be the start of NO_RESPONSE, so a silent reply never reaches the browser
+// and a real one starts streaming after its first few characters.
+async function* withoutNoResponse(deltas: AsyncIterable<string>): AsyncGenerator<string> {
+  let held = "";
+  let streaming = false;
+  for await (const text of deltas) {
+    if (streaming) {
+      yield text;
+      continue;
+    }
+    held += text;
+    const start = held.trimStart();
+    if (start.startsWith(NO_RESPONSE)) return;
+    if (NO_RESPONSE.startsWith(start)) continue;
+    streaming = true;
+    yield start;
+  }
+  const start = held.trimStart();
+  if (!streaming && start && start !== NO_RESPONSE && !start.startsWith(NO_RESPONSE)) yield start;
 }
 
 // Earlier notes go in as a labeled transcript rather than as chat turns. As chat turns,
@@ -111,6 +171,20 @@ function toolRunner(db: SupabaseClient, timeZone: string): ToolRunner {
         fileId: String(args.file_id ?? ""),
         query: String(args.query ?? ""),
         limit: typeof args.limit === "number" ? args.limit : undefined,
+      });
+    }
+    if (name === "get_messages") {
+      return getMessages(supabaseMessageSource(db), {
+        date: String(args.date ?? ""),
+        fullAiReplies: args.full_ai_replies !== false,
+        timeZone,
+      });
+    }
+    if (name === "query_history") {
+      return queryHistory(db, {
+        query: String(args.query ?? ""),
+        maxTokens: typeof args.max_tokens === "number" ? args.max_tokens : undefined,
+        timeZone,
       });
     }
     return `There is no tool called ${name}.`;
@@ -147,8 +221,12 @@ function readHistory(body: unknown): ChatMessage[] | null {
   const history: ChatMessage[] = [];
   for (const message of messages) {
     const { role, text } = (message ?? {}) as { role?: unknown; text?: unknown };
-    if ((role !== "user" && role !== "assistant") || !isShortString(text)) return null;
-    history.push({ role, content: text });
+    if ((role !== "user" && role !== "assistant") || typeof text !== "string" || !text.trim()) {
+      return null;
+    }
+    const content =
+      text.length > MAX_MESSAGE_CHARS ? `${text.slice(0, MAX_MESSAGE_CHARS)}… [cut off]` : text;
+    history.push({ role, content });
   }
   return history[history.length - 1].role === "user" ? history : null;
 }

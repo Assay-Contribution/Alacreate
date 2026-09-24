@@ -62,17 +62,23 @@ export type ToolDefinition = {
 // Runs one tool call and returns the text the model should see as the result.
 export type ToolRunner = (name: string, args: Record<string, unknown>) => Promise<string>;
 
-type ToolCall = { id: string; function: { name: string; arguments: string } };
+type ToolCall = { id: string; type: "function"; function: { name: string; arguments: string } };
 
-// Like chat(), but the model may call tools first. Each round, any tool calls it makes are
-// run and their results sent back, until it answers or MAX_TOOL_ROUNDS is reached.
-export async function chatWithTools(
+type StreamDelta = {
+  content?: string | null;
+  tool_calls?: { index: number; id?: string; function?: { name?: string; arguments?: string } }[];
+};
+
+// Streams the model's answer as it's written. The model may call tools first: each round,
+// its tool calls are run and the results sent back, until it answers or MAX_TOOL_ROUNDS is
+// reached. Only the final answer's text is yielded. Yields nothing if OpenAI fails.
+export async function* streamChatWithTools(
   messages: ChatMessage[],
   tools: ToolDefinition[],
   runTool: ToolRunner,
   maxTokens: number,
   log?: (line: string) => void,
-): Promise<string | null> {
+): AsyncGenerator<string> {
   const conversation: object[] = [...messages];
   for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
     const canUseTools = tools.length > 0 && round < MAX_TOOL_ROUNDS;
@@ -86,19 +92,37 @@ export async function chatWithTools(
         model: MODEL,
         max_tokens: maxTokens,
         messages: conversation,
+        stream: true,
         ...(canUseTools ? { tools } : {}),
       }),
     });
-    if (!response.ok) {
+    if (!response.ok || !response.body) {
       console.error("[ai] OpenAI API error", response.status, await response.text());
-      return null;
+      return;
     }
 
-    const message = (await response.json())?.choices?.[0]?.message;
-    const toolCalls: ToolCall[] = message?.tool_calls ?? [];
-    if (toolCalls.length === 0) return message?.content?.trim() || null;
+    // Tool calls arrive in pieces; stitch them together by index.
+    const toolCalls: ToolCall[] = [];
+    let content = "";
+    for await (const delta of readStreamDeltas(response.body)) {
+      for (const part of delta.tool_calls ?? []) {
+        const call = (toolCalls[part.index] ??= {
+          id: "",
+          type: "function",
+          function: { name: "", arguments: "" },
+        });
+        if (part.id) call.id = part.id;
+        call.function.name += part.function?.name ?? "";
+        call.function.arguments += part.function?.arguments ?? "";
+      }
+      if (delta.content) {
+        content += delta.content;
+        if (toolCalls.length === 0) yield delta.content;
+      }
+    }
+    if (toolCalls.length === 0) return;
 
-    conversation.push(message);
+    conversation.push({ role: "assistant", content: content || null, tool_calls: toolCalls });
     for (const call of toolCalls) {
       let result: string;
       try {
@@ -111,7 +135,31 @@ export async function chatWithTools(
       conversation.push({ role: "tool", tool_call_id: call.id, content: result });
     }
   }
-  return null;
+}
+
+// Parses OpenAI's server-sent events ("data: {...}" lines) into message deltas.
+async function* readStreamDeltas(body: ReadableStream<Uint8Array>): AsyncGenerator<StreamDelta> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) return;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      const data = line.trim().replace(/^data:\s*/, "");
+      if (!line.trim().startsWith("data:")) continue;
+      if (data === "[DONE]") return;
+      try {
+        const delta = JSON.parse(data)?.choices?.[0]?.delta;
+        if (delta) yield delta;
+      } catch {
+        // Ignore keep-alive or partial lines.
+      }
+    }
+  }
 }
 
 // A Supabase client that acts as the user who sent the request, so Row Level Security

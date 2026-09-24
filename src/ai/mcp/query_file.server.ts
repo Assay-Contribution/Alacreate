@@ -69,7 +69,10 @@ export async function queryFile(db: SupabaseClient, options: QueryFileOptions): 
   if (!file) return `No file with id ${fileId}. Call list_files to see the ids of the user's files.`;
 
   if (file.status === "pending" || file.status === "processing") {
-    return `${file.name} is still being processed and can't be searched yet. Try again in a minute.`;
+    return (
+      `${file.name} is still being processed and can't be searched yet. Tell the user to ` +
+      "ask again once it finishes (a ✓ appears next to the file)."
+    );
   }
   if (file.status !== "ready") {
     return `${file.name} can't be searched: ${file.error ?? "it hasn't been processed."}`;

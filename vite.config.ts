@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import { resolve } from "node:path";
 import { handleAssistant } from "./src/ai/assistant.server";
+import { handleIndexMessages } from "./src/ai/index_messages.server";
 import type { Handler } from "./src/ai/openai.server";
 import { handleProcessUpload } from "./src/ai/process_file.server";
 import { handleSummarize } from "./src/ai/summarize.server";
@@ -9,6 +10,7 @@ const DEV_ROUTES: Record<string, Handler> = {
   "/api/summarize": handleSummarize,
   "/api/assistant": handleAssistant,
   "/api/process-file": handleProcessUpload,
+  "/api/index-messages": handleIndexMessages,
 };
 
 export default defineConfig(({ mode }) => {
@@ -51,8 +53,17 @@ function devApi(): Plugin {
           const response = await handler(request, { requireAuth: false, debug: true });
 
           res.statusCode = response.status;
-          res.setHeader("content-type", "application/json");
-          res.end(await response.text());
+          res.setHeader("content-type", response.headers.get("content-type") ?? "application/json");
+          // Pass the body through as it arrives, so streamed AI replies stream in dev too.
+          if (response.body) {
+            const reader = response.body.getReader();
+            for (;;) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              res.write(value);
+            }
+          }
+          res.end();
         });
       }
     },

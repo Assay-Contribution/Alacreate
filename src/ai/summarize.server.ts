@@ -34,9 +34,12 @@ function buildPrompt(body: unknown): string | null {
   const files = stringList(body, "files");
   const links = stringList(body, "links");
   if (!notes || !files || !links) return null;
+  // Optional: the AI's replies that day, already shortened by the browser.
+  const aiReplies = stringList(body, "aiReplies") ?? [];
 
   const lines = [
     ...notes.map((text) => `Note: ${text}`),
+    ...aiReplies.map((text) => `AI assistant replied: ${text}`),
     ...files.map((name) => `File uploaded: ${name}`),
     ...links.map((url) => `Link shared: ${url}`),
   ];

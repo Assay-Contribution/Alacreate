@@ -5,6 +5,7 @@
 */
 import { escapeHtml, fileSizeLabel, formatFullDayLabel } from "./format";
 import { summarizeDay } from "../../ai/frontend/summarize";
+import { shortenAiReply } from "../../ai/shorten_ai_reply";
 import { userNotes, type DayEntry, type FileAttachment, type NoteEntry } from "./types";
 
 const READY_MARK =
@@ -63,6 +64,10 @@ export function renderDayEntry(options: DayEntryOptions): HTMLElement {
       notes: userNotes(entry.notes).map((note) => note.text),
       files: entry.files.map((file) => file.name),
       links: entry.links.map((link) => link.url),
+      // Only the first two lines of each AI reply, to save tokens.
+      aiReplies: entry.notes
+        .filter((note) => note.author === "assistant")
+        .map((note) => shortenAiReply(note.text)),
     }).then((summary) => {
       if (summary) summaryEl.textContent = summary;
     });
@@ -394,13 +399,17 @@ function renderExpandToggle(bubble: HTMLElement, body: HTMLElement): HTMLButtonE
   });
 
   // Only offer the arrow (and the fade under it) when the text actually overflows two
-  // lines. Re-checks whenever the text resizes, including when a collapsed day is opened.
-  new ResizeObserver(() => {
+  // lines. Re-checks whenever the text resizes (including when a collapsed day is opened)
+  // and whenever it changes, so a streaming reply gets its arrow as soon as it outgrows
+  // two lines, even though a clamped bubble stops growing at that point.
+  const update = () => {
     if (!body.classList.contains("is-clamped")) return;
     const overflows = body.scrollHeight > body.clientHeight + 1;
     toggle.hidden = !overflows;
     bubble.classList.toggle("is-collapsible", overflows);
-  }).observe(body);
+  };
+  new ResizeObserver(update).observe(body);
+  new MutationObserver(update).observe(body, { childList: true, characterData: true, subtree: true });
 
   return toggle;
 }

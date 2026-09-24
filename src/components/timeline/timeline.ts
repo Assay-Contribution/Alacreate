@@ -13,6 +13,7 @@
 import { supabaseClient } from "../../supabase";
 import { askAssistant } from "../../ai/frontend/assistant";
 import { deleteFileFromSearch, getReadyFiles, processUploadedFile } from "../../ai/frontend/files";
+import { indexMessagesForSearch, removeMessageFromSearch } from "../../ai/frontend/messages";
 import { renderDayEntry } from "./day_entry";
 import { formatFullDayLabel, localIsoDate } from "./format";
 import { renderComposer } from "./inuputs";
@@ -168,6 +169,7 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
       existing.addedAt === note.addedAt ? { ...existing, text: newText } : existing,
     );
     await persistEntry(entry);
+    indexMessagesForSearch(date, [{ ...note, text: newText }]);
     rerenderDay(date);
   };
 
@@ -176,6 +178,7 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
     if (!entry) return;
     entry.notes = entry.notes.filter((existing) => existing.addedAt !== note.addedAt);
     await persistEntry(entry);
+    await removeMessageFromSearch(note);
     rerenderDay(date);
   };
 
@@ -200,6 +203,22 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
     existing.replaceWith(replacement);
     dayElements.set(date, replacement);
     observer.observe(replacement);
+  };
+
+  // Updates the AI bubble that's still being written, without re-rendering the whole day.
+  // The bubble stays collapsed to two lines (its arrow appears once the reply outgrows
+  // them), unless the user opens it. Keeps the chat pinned to the bottom if the user was
+  // already there.
+  const showStreamingReply = (date: string, text: string) => {
+    const bodies = dayElements
+      .get(date)
+      ?.querySelectorAll(".day-entry-activity-item.is-assistant .day-entry-activity-text-body");
+    const body = bodies?.[bodies.length - 1];
+    if (!body) return;
+    const atBottom =
+      scrollArea.scrollHeight - scrollArea.scrollTop - scrollArea.clientHeight < 80;
+    body.textContent = text;
+    if (atBottom) scrollArea.scrollTop = scrollArea.scrollHeight;
   };
 
   const renderDays = () => {
@@ -245,15 +264,33 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
       }
 
       if (text) {
-        const reply = await askAssistant(entry.notes);
-        if (reply) {
-          const latest = entries.get(today) ?? entry;
-          latest.notes = [
-            ...latest.notes,
-            { text: reply, addedAt: new Date().toISOString(), author: "assistant" },
-          ];
-          await persistEntry(latest);
-          rerenderDay(today);
+        indexMessagesForSearch(today, [{ text, addedAt: now }]);
+
+        // The AI's bubble appears with its first words and fills in as the reply streams.
+        // If the AI stays silent, no text ever arrives and no bubble is added.
+        const streaming: { note: NoteEntry | null } = { note: null };
+        const reply = await askAssistant(entry.notes, (textSoFar) => {
+          if (!streaming.note) {
+            streaming.note = { text: textSoFar, addedAt: new Date().toISOString(), author: "assistant" };
+            const day = entries.get(today) ?? entry;
+            day.notes = [...day.notes, streaming.note];
+            rerenderDay(today);
+          }
+          streaming.note.text = textSoFar;
+          showStreamingReply(today, textSoFar);
+        });
+        if (streaming.note) {
+          const day = entries.get(today) ?? entry;
+          if (reply) {
+            // The bubble already shows the full reply; redrawing it would re-collapse a
+            // bubble the user opened while it was streaming.
+            streaming.note.text = reply;
+            indexMessagesForSearch(today, [streaming.note]);
+          } else {
+            day.notes = day.notes.filter((note) => note !== streaming.note);
+            rerenderDay(today);
+          }
+          await persistEntry(day);
         }
       }
     },

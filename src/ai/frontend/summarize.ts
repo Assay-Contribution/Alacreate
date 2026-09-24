@@ -6,16 +6,24 @@ export type DayActivity = {
   notes: string[];
   files: string[];
   links: string[];
+  // The AI's replies that day. Pass them through shortenAiReply to save tokens.
+  aiReplies?: string[];
 };
 
 const cache = new Map<string, Promise<string | null>>();
 
-export function summarizeDay({ date, notes, files, links }: DayActivity): Promise<string | null> {
-  if (notes.length === 0 && files.length === 0 && links.length === 0) {
+export function summarizeDay({
+  date,
+  notes,
+  files,
+  links,
+  aiReplies = [],
+}: DayActivity): Promise<string | null> {
+  if (notes.length === 0 && files.length === 0 && links.length === 0 && aiReplies.length === 0) {
     return Promise.resolve(null);
   }
 
-  const payload = { notes, files, links };
+  const payload = { notes, files, links, aiReplies };
   const key = `${date}:${JSON.stringify(payload)}`;
   const cached = cache.get(key);
   if (cached) return cached;

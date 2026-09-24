@@ -3,15 +3,40 @@ import { postAi } from "./client";
 
 type ProcessResult = { fileId?: string; status?: string; error?: string };
 
+// How long the assistant waits for just-uploaded files to finish processing before it
+// answers, so "here's a file, what does it say?" works in one message. Files that take
+// longer are reported as still processing, and the AI asks the user to try again.
+const UPLOAD_WAIT_MS = 7000;
+
+// Processing requests that haven't finished yet.
+const inFlight = new Set<Promise<boolean>>();
+
 // Makes a just-uploaded file searchable by the AI (reads it, embeds it, stores the
 // sections). Don't await it before updating the UI: processing takes a few seconds, or up
 // to about a minute for very large PDFs. Resolves to true once the file is ready.
-export async function processUploadedFile(storagePath: string, size: number): Promise<boolean> {
-  const result = await postAi<ProcessResult>("/api/process-file", { path: storagePath, size });
-  if (import.meta.env.DEV && result) {
-    console.log(`[AI] processed ${storagePath}:`, result.status, result.error ?? "");
-  }
-  return result?.status === "ready";
+export function processUploadedFile(storagePath: string, size: number): Promise<boolean> {
+  const request = postAi<ProcessResult>("/api/process-file", { path: storagePath, size }).then(
+    (result) => {
+      if (import.meta.env.DEV && result) {
+        console.log(`[AI] processed ${storagePath}:`, result.status, result.error ?? "");
+      }
+      return result?.status === "ready";
+    },
+  );
+  inFlight.add(request);
+  void request.finally(() => inFlight.delete(request));
+  return request;
+}
+
+// Waits until files still being processed are done, but no longer than UPLOAD_WAIT_MS.
+// Returns immediately when nothing is processing.
+export async function waitForUploads(): Promise<void> {
+  if (inFlight.size === 0) return;
+  if (import.meta.env.DEV) console.log(`[AI] waiting for ${inFlight.size} upload(s) to process…`);
+  await Promise.race([
+    Promise.allSettled([...inFlight]),
+    new Promise((resolve) => setTimeout(resolve, UPLOAD_WAIT_MS)),
+  ]);
 }
 
 // Which of these files have finished processing and can be searched by the AI (the same

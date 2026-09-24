@@ -197,7 +197,10 @@ function searchStatus(record: FileRecordInfo | undefined): string {
       return `ready (${record.chunkCount} sections), use query_file`;
     case "pending":
     case "processing":
-      return "being processed, try again in a minute";
+      return (
+        "still being processed, so it can't be searched yet. Tell the user to ask again " +
+        "once it finishes (a ✓ appears next to the file)"
+      );
     default:
       return `can't be searched: ${record.error ?? record.status}`;
   }

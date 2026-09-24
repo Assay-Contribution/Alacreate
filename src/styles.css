@@ -1221,6 +1221,9 @@ footer {
   line-height: 38px;
   box-sizing: border-box;
   padding: 0 16px;
+  /* The site-wide input rule adds a bottom margin, which pushes this up out of line
+     with the buttons. */
+  margin: 0;
   border: 1px solid var(--line);
   border-radius: 999px;
   font: inherit;

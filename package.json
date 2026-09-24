@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "process-file": "tsx --env-file=.env.local scripts/process-file.ts"
+    "process-file": "tsx --env-file=.env.local scripts/process-file.ts",
+    "index-messages": "tsx --env-file=.env.local scripts/index-messages.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
