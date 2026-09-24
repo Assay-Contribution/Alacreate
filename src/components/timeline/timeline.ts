@@ -11,8 +11,9 @@
     These different # should be selectable from the time_select component.
 */
 import { supabaseClient } from "../../supabase";
+import { askAssistant } from "../../ai/assistant";
 import { renderDayEntry } from "./day_entry";
-import { formatFullDayLabel } from "./format";
+import { formatFullDayLabel, localIsoDate } from "./format";
 import { renderComposer } from "./inuputs";
 import { renderTimeSelect, type TimeSelectController } from "./time_select";
 import { createEmptyDayEntry, type DayEntry, type FileAttachment, type NoteEntry } from "./types";
@@ -69,7 +70,7 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
   }
 
   const entries = await loadEntries(userId);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localIsoDate();
   if (!entries.has(today)) entries.set(today, createEmptyDayEntry(today));
 
   const dayElements = new Map<string, HTMLElement>();
@@ -228,6 +229,19 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
       } else {
         await persistEntry(entry);
         rerenderDay(today);
+      }
+
+      if (text) {
+        const reply = await askAssistant(entry.notes);
+        if (reply) {
+          const latest = entries.get(today) ?? entry;
+          latest.notes = [
+            ...latest.notes,
+            { text: reply, addedAt: new Date().toISOString(), author: "assistant" },
+          ];
+          await persistEntry(latest);
+          rerenderDay(today);
+        }
       }
     },
   });

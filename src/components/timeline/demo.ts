@@ -1,7 +1,9 @@
 /*  Local, backend-free harness for eyeballing the timeline components in a browser.
     Not part of the app; not imported by any page. Delete once the real
     Supabase-backed integration (see timeline.ts) is wired into a page. */
+import { askAssistant } from "../../ai/assistant";
 import { renderDayEntry } from "./day_entry";
+import { localIsoDate } from "./format";
 import { renderComposer } from "./inuputs";
 import { renderTimeSelect } from "./time_select";
 import { createEmptyDayEntry, type DayEntry } from "./types";
@@ -9,7 +11,7 @@ import { createEmptyDayEntry, type DayEntry } from "./types";
 function isoDaysAgo(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() - days);
-  return date.toISOString().slice(0, 10);
+  return localIsoDate(date);
 }
 
 function atTime(daysAgo: number, hhmm: string): string {
@@ -42,6 +44,15 @@ const mockEntries = new Map<string, DayEntry>([
       notes: [
         { text: "Started reviewing the schema.", addedAt: atTime(2, "09:15") },
         { text: "Found the missing jsonb columns.", addedAt: atTime(2, "11:40") },
+        { text: "Hey AI, what should I check next?", addedAt: atTime(2, "11:42") },
+        {
+          text:
+            "Confirm the new jsonb columns default to empty arrays so older rows still load. " +
+            "Then test an upsert from the timeline to make sure notes, links, and files save " +
+            "together, and check that Row Level Security still blocks reading other users' reports.",
+          addedAt: atTime(2, "11:43"),
+          author: "assistant",
+        },
       ],
       files: [
         {
@@ -164,6 +175,17 @@ if (root) {
         })),
       ];
       renderDays();
+
+      if (text) {
+        askAssistant(entry.notes).then((reply) => {
+          if (!reply) return;
+          entry.notes = [
+            ...entry.notes,
+            { text: reply, addedAt: new Date().toISOString(), author: "assistant" },
+          ];
+          renderDays();
+        });
+      }
     },
   });
 

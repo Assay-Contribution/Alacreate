@@ -1,14 +1,58 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import { resolve } from "node:path";
+import { handleAssistant } from "./src/ai/assistant.server";
+import type { Handler } from "./src/ai/openai.server";
+import { handleSummarize } from "./src/ai/summarize.server";
 
-export default defineConfig({
-  build: {
-    rollupOptions: {
-      input: {
-        home: resolve(__dirname, "index.html"),
-        signup: resolve(__dirname, "signup.html"),
-        reporting: resolve(__dirname, "reporting.html"),
+const DEV_ROUTES: Record<string, Handler> = {
+  "/api/summarize": handleSummarize,
+  "/api/assistant": handleAssistant,
+};
+
+export default defineConfig(({ mode }) => {
+  // Make non-VITE_ secrets (e.g. API_KEY) from .env.local visible to the
+  // dev API middleware. Only VITE_-prefixed values ever reach the browser bundle.
+  const env = loadEnv(mode, process.cwd(), "");
+  for (const [name, value] of Object.entries(env)) {
+    process.env[name] ??= value;
+  }
+
+  return {
+    plugins: [devApi()],
+    build: {
+      rollupOptions: {
+        input: {
+          home: resolve(__dirname, "index.html"),
+          signup: resolve(__dirname, "signup.html"),
+          reporting: resolve(__dirname, "reporting.html"),
+        },
       },
     },
-  },
+  };
 });
+
+// Serves the AI backend during `npm run dev`; on Vercel, the files in api/ do this.
+function devApi(): Plugin {
+  return {
+    name: "dev-api",
+    configureServer(server) {
+      for (const [route, handler] of Object.entries(DEV_ROUTES)) {
+        server.middlewares.use(route, async (req, res) => {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) chunks.push(chunk as Buffer);
+
+          const request = new Request(`http://localhost${route}`, {
+            method: req.method,
+            headers: req.headers as Record<string, string>,
+            body: req.method === "POST" ? Buffer.concat(chunks) : undefined,
+          });
+          const response = await handler(request, { requireAuth: false });
+
+          res.statusCode = response.status;
+          res.setHeader("content-type", "application/json");
+          res.end(await response.text());
+        });
+      }
+    },
+  };
+}

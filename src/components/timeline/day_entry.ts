@@ -4,8 +4,8 @@
     In the expanded view, users should be able to upload files like daily reports if they would like.
 */
 import { escapeHtml, fileSizeLabel, formatFullDayLabel } from "./format";
-import { summarizeDay } from "./summarize";
-import type { DayEntry, FileAttachment, NoteEntry } from "./types";
+import { summarizeDay } from "../../ai/summarize";
+import { userNotes, type DayEntry, type FileAttachment, type NoteEntry } from "./types";
 
 export type DayEntryOptions = {
   entry: DayEntry;
@@ -52,7 +52,12 @@ export function renderDayEntry(options: DayEntryOptions): HTMLElement {
     summaryEl.className = "day-entry-note-preview";
     summaryEl.textContent = fallbackSummary(entry);
     preview.append(summaryEl);
-    summarizeDay(entry).then((summary) => {
+    summarizeDay({
+      date: entry.date,
+      notes: userNotes(entry.notes).map((note) => note.text),
+      files: entry.files.map((file) => file.name),
+      links: entry.links.map((link) => link.url),
+    }).then((summary) => {
       if (summary) summaryEl.textContent = summary;
     });
 
@@ -247,10 +252,24 @@ function renderActivityFeed(entry: DayEntry, actions?: ActivityActions): HTMLEle
 
     if (item.type === "note") {
       const note = item.note;
+      if (note.author === "assistant") {
+        listItem.classList.add("is-assistant");
+        const badge = document.createElement("span");
+        badge.className = "day-entry-ai-badge";
+        badge.textContent = "AI";
+        listItem.append(badge);
+      }
       const textSpan = document.createElement("span");
       textSpan.className = "day-entry-activity-text";
       textSpan.textContent = note.text;
       listItem.append(textSpan);
+      if (note.author === "assistant") {
+        // Clamp an inner span so the bubble's padding doesn't reveal a sliver of line three.
+        const body = document.createElement("span");
+        body.className = "day-entry-activity-text-body is-clamped";
+        body.textContent = note.text;
+        textSpan.replaceChildren(body, renderExpandToggle(textSpan, body));
+      }
 
       if (actions) {
         const editActions = document.createElement("span");
@@ -345,8 +364,38 @@ function renderActivityFeed(entry: DayEntry, actions?: ActivityActions): HTMLEle
   return list;
 }
 
+// Long AI replies start clamped to two lines; the arrow in the bubble's bottom-right
+// corner toggles the full text.
+function renderExpandToggle(bubble: HTMLElement, body: HTMLElement): HTMLButtonElement {
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "day-entry-expand-toggle";
+  toggle.textContent = "⌄";
+  toggle.setAttribute("aria-label", "Show full response");
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.hidden = true;
+
+  toggle.addEventListener("click", () => {
+    const expanded = !body.classList.toggle("is-clamped");
+    toggle.setAttribute("aria-expanded", String(expanded));
+    toggle.setAttribute("aria-label", expanded ? "Show less" : "Show full response");
+  });
+
+  // Only offer the arrow (and the fade under it) when the text actually overflows two
+  // lines. Re-checks whenever the text resizes, including when a collapsed day is opened.
+  new ResizeObserver(() => {
+    if (!body.classList.contains("is-clamped")) return;
+    const overflows = body.scrollHeight > body.clientHeight + 1;
+    toggle.hidden = !overflows;
+    bubble.classList.toggle("is-collapsible", overflows);
+  }).observe(body);
+
+  return toggle;
+}
+
 function fallbackSummary(entry: DayEntry): string {
-  if (entry.notes.length > 0) return entry.notes[entry.notes.length - 1].text;
+  const notes = userNotes(entry.notes);
+  if (notes.length > 0) return notes[notes.length - 1].text;
   const parts: string[] = [];
   if (entry.files.length > 0) {
     parts.push(`${entry.files.length} file${entry.files.length > 1 ? "s" : ""}`);

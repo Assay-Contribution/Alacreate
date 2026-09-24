@@ -8,6 +8,13 @@ export function escapeHtml(value: string): string {
   );
 }
 
+// YYYY-MM-DD in the user's local time zone (toISOString() would give the UTC date).
+export function localIsoDate(date: Date = new Date()): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
 function parseDay(date: string): Date {
   return new Date(`${date}T00:00:00`);
 }

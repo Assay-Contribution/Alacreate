@@ -16,7 +16,13 @@ export type FileAttachment = {
 export type NoteEntry = {
   text: string;
   addedAt: string;
+  // Replies from the AI assistant are stored alongside notes; user notes omit this.
+  author?: "assistant";
 };
+
+export function userNotes(notes: NoteEntry[]): NoteEntry[] {
+  return notes.filter((note) => note.author !== "assistant");
+}
 
 export type DayEntry = {
   date: string;

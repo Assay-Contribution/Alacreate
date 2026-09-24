@@ -795,18 +795,179 @@ footer {
   flex-direction: column;
   gap: 12px;
 }
+/* Chat layout: the user's notes and files sit on the right, AI replies on the left. */
 .day-entry-activity-item {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
+  justify-content: flex-end;
+  gap: 10px;
   font-size: 1.05rem;
   line-height: 1.4;
 }
+.day-entry-activity-item > .day-entry-activity-actions,
+.day-entry-activity-item > .file-chip-remove-inline {
+  order: 0;
+  margin-left: 0;
+}
+.day-entry-activity-item > .note-time {
+  order: 1;
+}
+.day-entry-activity-item > .day-entry-activity-text,
+.day-entry-activity-item > .file-chip,
+.day-entry-activity-item > .day-entry-activity-edit-input {
+  order: 2;
+}
 .day-entry-activity-text {
   color: var(--ink);
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
+  max-width: 75%;
+  padding: 7px 13px;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--accent-soft);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.day-entry-activity-item.is-assistant {
+  justify-content: flex-start;
+}
+.day-entry-activity-item.is-assistant > .day-entry-ai-badge {
+  order: 0;
+}
+.day-entry-activity-item.is-assistant > .day-entry-activity-text,
+.day-entry-activity-item.is-assistant > .day-entry-activity-edit-input {
+  order: 1;
+}
+.day-entry-activity-item.is-assistant > .note-time {
+  order: 2;
+}
+.day-entry-activity-item.is-assistant > .day-entry-activity-actions {
+  order: 3;
+}
+.day-entry-activity-item.is-assistant .day-entry-activity-text {
+  border-radius: 16px 16px 16px 4px;
+  background: #f1f1f6;
+}
+.day-entry-activity-text-body.is-clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+/* Collapsible AI replies: the arrow sits in the bubble's bottom-right corner, over the
+   end of the second line, and that line fades out behind it. */
+.day-entry-activity-text.is-collapsible {
+  position: relative;
+}
+.day-entry-activity-text.is-collapsible .day-entry-activity-text-body.is-clamped {
+  -webkit-mask-image: linear-gradient(#000, #000),
+    linear-gradient(to left, transparent 22px, #000 72px);
+  mask-image: linear-gradient(#000, #000),
+    linear-gradient(to left, transparent 22px, #000 72px);
+  -webkit-mask-size: 100% calc(100% - 1.4em), 100% 1.4em;
+  mask-size: 100% calc(100% - 1.4em), 100% 1.4em;
+  -webkit-mask-position: top, bottom;
+  mask-position: top, bottom;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.day-entry-activity-text.is-collapsible:has(.day-entry-activity-text-body:not(.is-clamped)) {
+  padding-bottom: 34px;
+}
+.timeline-root .day-entry-expand-toggle {
+  position: absolute;
+  right: 8px;
+  bottom: 7px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 150ms ease, color 150ms ease;
+}
+.timeline-root .day-entry-expand-toggle[hidden] {
+  display: none;
+}
+.timeline-root .day-entry-expand-toggle:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.timeline-root .day-entry-expand-toggle[aria-expanded="true"] {
+  transform: rotate(180deg);
+}
+.day-entry-ai-badge {
+  order: 0;
+}
+.day-entry-activity-item.is-assistant > .day-entry-activity-text,
+.day-entry-activity-item.is-assistant > .day-entry-activity-edit-input {
+  order: 1;
+}
+.day-entry-activity-item.is-assistant > .note-time {
+  order: 2;
+}
+.day-entry-activity-item.is-assistant > .day-entry-activity-actions {
+  order: 3;
+}
+.day-entry-activity-item.is-assistant .day-entry-activity-text {
+  border-radius: 16px 16px 16px 4px;
+  background: #f1f1f6;
+}
+.day-entry-activity-text-body.is-clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.day-entry-activity-item.is-assistant > .day-entry-expand-toggle {
+  order: 1;
+}
+.timeline-root .day-entry-expand-toggle {
+  flex-shrink: 0;
+  align-self: flex-end;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 150ms ease, color 150ms ease;
+}
+.timeline-root .day-entry-expand-toggle[hidden] {
+  display: none;
+}
+.timeline-root .day-entry-expand-toggle:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.timeline-root .day-entry-expand-toggle[aria-expanded="true"] {
+  transform: rotate(180deg);
+}
+.day-entry-ai-badge {
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 .day-entry-activity-actions {
   display: inline-flex;
@@ -1318,6 +1479,23 @@ body.reporting-new-page {
 }
 .timeline-page-root .day-entry-activity-text {
   color: #dfe1ff;
+  background: rgba(126, 249, 255, 0.1);
+}
+.timeline-page-root .day-entry-activity-item.is-assistant .day-entry-activity-text {
+  background: rgba(255, 255, 255, 0.06);
+}
+.timeline-page-root .day-entry-expand-toggle {
+  background: rgba(15, 16, 35, 0.9);
+  border-color: rgba(126, 249, 255, 0.3);
+  color: #9fa2d8;
+}
+.timeline-page-root .day-entry-expand-toggle:hover {
+  background: rgba(126, 249, 255, 0.12);
+  color: #7ef9ff;
+}
+.timeline-page-root .day-entry-ai-badge {
+  background: rgba(126, 249, 255, 0.12);
+  color: #7ef9ff;
 }
 .timeline-page-root .day-entry-activity-action {
   background: rgba(15, 16, 35, 0.9);
