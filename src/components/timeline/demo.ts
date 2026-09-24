@@ -1,7 +1,7 @@
 /*  Local, backend-free harness for eyeballing the timeline components in a browser.
     Not part of the app; not imported by any page. Delete once the real
     Supabase-backed integration (see timeline.ts) is wired into a page. */
-import { askAssistant } from "../../ai/assistant";
+import { askAssistant } from "../../ai/frontend/assistant";
 import { renderDayEntry } from "./day_entry";
 import { localIsoDate } from "./format";
 import { renderComposer } from "./inuputs";

@@ -11,7 +11,7 @@
     These different # should be selectable from the time_select component.
 */
 import { supabaseClient } from "../../supabase";
-import { askAssistant } from "../../ai/assistant";
+import { askAssistant } from "../../ai/frontend/assistant";
 import { renderDayEntry } from "./day_entry";
 import { formatFullDayLabel, localIsoDate } from "./format";
 import { renderComposer } from "./inuputs";

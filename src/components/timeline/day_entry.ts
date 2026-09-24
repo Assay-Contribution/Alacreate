@@ -4,7 +4,7 @@
     In the expanded view, users should be able to upload files like daily reports if they would like.
 */
 import { escapeHtml, fileSizeLabel, formatFullDayLabel } from "./format";
-import { summarizeDay } from "../../ai/summarize";
+import { summarizeDay } from "../../ai/frontend/summarize";
 import { userNotes, type DayEntry, type FileAttachment, type NoteEntry } from "./types";
 
 export type DayEntryOptions = {

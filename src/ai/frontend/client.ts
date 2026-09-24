@@ -1,4 +1,4 @@
-import { supabaseClient } from "../supabase";
+import { supabaseClient } from "../../supabase";
 
 // Calls one of our /api AI endpoints with the signed-in user's token. The AI key itself
 // lives server-side; the browser never talks to the AI provider directly.
