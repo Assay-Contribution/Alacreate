@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import { resolve } from "node:path";
 import { handleAssistant } from "./src/ai/assistant.server";
+import { handleGenerateReport } from "./src/ai/generate_report.server";
 import { handleIndexMessages } from "./src/ai/index_messages.server";
 import type { Handler } from "./src/ai/openai.server";
 import { handleProcessUpload } from "./src/ai/process_file.server";
@@ -11,6 +12,7 @@ const DEV_ROUTES: Record<string, Handler> = {
   "/api/assistant": handleAssistant,
   "/api/process-file": handleProcessUpload,
   "/api/index-messages": handleIndexMessages,
+  "/api/generate-report": handleGenerateReport,
 };
 
 export default defineConfig(({ mode }) => {

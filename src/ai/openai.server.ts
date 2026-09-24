@@ -4,7 +4,10 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-export const MODEL = "gpt-4.1-mini";
+// Fast, cheap model for chat, summaries, tool calls, and gathering material for reports.
+export const CHAT_MODEL = process.env.AI_CHAT_MODEL ?? "gpt-4.1-mini";
+// Stronger model for writing reports, where quality matters more than speed.
+export const REPORT_MODEL = process.env.AI_REPORT_MODEL ?? "gpt-4.1";
 // Most tool calls the model may make before it has to answer, so it can't loop forever.
 const MAX_TOOL_ROUNDS = 4;
 const MAX_ITEMS = 50;
@@ -35,14 +38,18 @@ export async function guardRequest(
   return null;
 }
 
-export async function chat(messages: ChatMessage[], maxTokens: number): Promise<string | null> {
+export async function chat(
+  messages: ChatMessage[],
+  maxTokens: number,
+  model = CHAT_MODEL,
+): Promise<string | null> {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${process.env.API_KEY}`,
     },
-    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, messages }),
+    body: JSON.stringify({ model, max_tokens: maxTokens, messages }),
   });
 
   if (!response.ok) {
@@ -78,6 +85,7 @@ export async function* streamChatWithTools(
   runTool: ToolRunner,
   maxTokens: number,
   log?: (line: string) => void,
+  model = CHAT_MODEL,
 ): AsyncGenerator<string> {
   const conversation: object[] = [...messages];
   for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
@@ -89,7 +97,7 @@ export async function* streamChatWithTools(
         authorization: `Bearer ${process.env.API_KEY}`,
       },
       body: JSON.stringify({
-        model: MODEL,
+        model,
         max_tokens: maxTokens,
         messages: conversation,
         stream: true,

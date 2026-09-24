@@ -86,14 +86,11 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
     entries.set(entry.date, entry);
     if (!supabaseClient) return false;
     const { error } = await supabaseClient.from("contribution_reports").upsert(
+      // Only the columns the timeline edits. The report columns (e.g. final_report, written
+      // by report generation) are left alone so a stale copy here can't overwrite them.
       {
         user_id: userId,
         report_date: entry.date,
-        north_star: entry.northStar,
-        next_steps: entry.nextSteps,
-        morning_report: entry.morningReport,
-        midday_report: entry.middayReport,
-        final_report: entry.finalReport,
         links: entry.links,
         files: entry.files,
         notes: entry.notes,

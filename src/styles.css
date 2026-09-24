@@ -725,6 +725,47 @@ footer {
   border-left: 1px solid var(--line);
 }
 
+/* Scrollbars inside the timeline: thin and themed instead of the browser default. */
+.timeline-scroll,
+.timeline-time-select-dock,
+.report-view-body {
+  --scrollbar-thumb: rgba(175, 101, 186, 0.35);
+  --scrollbar-thumb-hover: rgba(175, 101, 186, 0.65);
+}
+.timeline-scroll::-webkit-scrollbar,
+.timeline-time-select-dock::-webkit-scrollbar,
+.report-view-body::-webkit-scrollbar {
+  width: 10px;
+}
+.timeline-scroll::-webkit-scrollbar-track,
+.timeline-time-select-dock::-webkit-scrollbar-track,
+.report-view-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.timeline-scroll::-webkit-scrollbar-thumb,
+.timeline-time-select-dock::-webkit-scrollbar-thumb,
+.report-view-body::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+}
+.timeline-scroll::-webkit-scrollbar-thumb:hover,
+.timeline-time-select-dock::-webkit-scrollbar-thumb:hover,
+.report-view-body::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+/* Firefox doesn't support ::-webkit-scrollbar, so use the standard properties there.
+   (They're limited to Firefox because Chrome ignores the styles above when they're set.) */
+@supports not selector(::-webkit-scrollbar) {
+  .timeline-scroll,
+  .timeline-time-select-dock,
+  .report-view-body {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+}
+
 .day-entry {
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -1394,6 +1435,226 @@ body.reporting-new-page {
   min-height: 0;
   padding: 18px 4vw 22px;
 }
+/* Reporting page body: side menu on the left, timeline filling the rest. */
+.reporting-page {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 18px;
+  padding: 18px 4vw 22px;
+}
+.reporting-page > .timeline-page-root {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+}
+.side-menu {
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.side-menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* Two classes so these win over the site-wide button styles (e.g. button:hover). */
+.side-menu .side-menu-button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(126, 249, 255, 0.25);
+  border-radius: 12px;
+  background: rgba(15, 16, 35, 0.72);
+  color: #e7e8ff;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: left;
+  transition: border-color 180ms ease, box-shadow 180ms ease, color 180ms ease;
+}
+.side-menu .side-menu-button:hover {
+  background: rgba(15, 16, 35, 0.72);
+  border-color: #7ef9ff;
+  color: #7ef9ff;
+  box-shadow: 0 0 14px rgba(126, 249, 255, 0.25);
+  transform: none;
+}
+.side-menu .side-menu-button svg {
+  flex-shrink: 0;
+}
+.side-menu .side-menu-button span {
+  color: inherit;
+}
+@media (max-width: 720px) {
+  .reporting-page {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .side-menu {
+    flex: 0 0 auto;
+  }
+  .side-menu-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .side-menu .side-menu-button {
+    width: auto;
+  }
+}
+
+/* Day picker dialog, centered over the page. */
+.day-selection-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(2, 2, 8, 0.6);
+  backdrop-filter: blur(3px);
+}
+.day-selection {
+  width: min(360px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid rgba(126, 249, 255, 0.3);
+  border-radius: 16px;
+  background: #0f1023;
+  color: #e7e8ff;
+  box-shadow: 0 0 40px rgba(83, 79, 209, 0.35);
+}
+.day-selection h2 {
+  margin: 0;
+  color: #7ef9ff;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.day-selection label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  color: #a9acdf;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.day-selection input[type="date"] {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(126, 249, 255, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #e7e8ff;
+  color-scheme: dark;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 1rem;
+  text-transform: none;
+}
+/* Report viewer: a larger dialog showing progress, then the generated report. */
+.report-view {
+  width: min(760px, 100%);
+  max-height: min(86vh, 900px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid rgba(126, 249, 255, 0.3);
+  border-radius: 16px;
+  background: #0f1023;
+  color: #dfe1ff;
+  box-shadow: 0 0 40px rgba(83, 79, 209, 0.35);
+}
+.report-view-status {
+  margin: 0;
+  color: #7ef9ff;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.report-view-status.is-error {
+  color: #ff8fa3;
+}
+.report-view-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+.report-view-body h2 {
+  margin: 0 0 10px;
+  color: #7ef9ff;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.report-view-body h3 {
+  margin: 18px 0 6px;
+  color: #e7e8ff;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.report-view-body p {
+  margin: 0 0 8px;
+}
+.report-view-body ul {
+  margin: 0 0 8px;
+  padding-left: 20px;
+}
+.report-view-body li {
+  margin-bottom: 4px;
+}
+.report-view-body strong {
+  color: #fff;
+}
+.day-selection-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.day-selection-actions button {
+  width: auto;
+  margin: 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(126, 249, 255, 0.3);
+  border-radius: 999px;
+  background: transparent;
+  color: #e7e8ff;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.75rem;
+}
+.day-selection-actions button:hover {
+  background: rgba(126, 249, 255, 0.1);
+  transform: none;
+}
+.day-selection-actions button.is-primary {
+  background: #7ef9ff;
+  border-color: #7ef9ff;
+  color: #05060f;
+}
+.day-selection-actions button.is-primary:hover {
+  background: #2f8fd1;
+  border-color: #2f8fd1;
+  color: #f2f8ff;
+}
 .timeline-page-root.timeline-root {
   height: 100%;
   width: 100%;
@@ -1413,6 +1674,12 @@ body.reporting-new-page {
   text-transform: uppercase;
   font-size: 1.4rem;
   text-shadow: 0 0 14px rgba(126, 249, 255, 0.35);
+}
+.timeline-page-root .timeline-scroll,
+.timeline-page-root .timeline-time-select-dock,
+.report-view-body {
+  --scrollbar-thumb: rgba(126, 249, 255, 0.4);
+  --scrollbar-thumb-hover: rgba(126, 249, 255, 0.75);
 }
 .timeline-page-root .timeline-time-select-dock {
   background: rgba(10, 11, 26, 0.55);
