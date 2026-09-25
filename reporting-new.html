@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A daily contribution timeline for turning intention into progress."
+    />
+    <title>New Reporting | Contribute</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body class="reporting-new-page">
+    <main class="timeline-page">
+      <nav class="site-nav" aria-label="Main navigation">
+        <a class="wordmark" href="/">Ala<span>create</span></a>
+        <button
+          class="menu-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="site-menu"
+        >
+          <span class="menu-label">Menu</span>
+          <span class="menu-icon" aria-hidden="true"><i></i><i></i></span>
+        </button>
+        <div class="site-menu" id="site-menu">
+          <a class="nav-link" href="/">Manifesto</a>
+          <a class="nav-link" href="/reporting.html">Reporting</a>
+          <a class="nav-link active" href="/reporting-new.html">New Reporting</a>
+          <a class="nav-link" href="/signup.html"
+            >Sign up <span aria-hidden="true">↗</span></a
+          >
+        </div>
+      </nav>
+
+      <header class="timeline-page-header">
+        <p class="eyebrow">A daily practice / 03</p>
+        <h1><strong>Contribution</strong> <em>Timeline</em></h1>
+      </header>
+
+      <div id="reportingPageRoot"></div>
+    </main>
+
+    <script type="module" src="/src/reporting-new.ts"></script>
+    <script type="module" src="/src/nav.ts"></script>
+  </body>
+</html>
