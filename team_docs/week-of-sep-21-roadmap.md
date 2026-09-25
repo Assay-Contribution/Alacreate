@@ -1,6 +1,6 @@
 # Week of Sep 21 Roadmap
 
-*As of 2026-09-19*
+_As of 2026-09-19_
 
 ## Overview
 
@@ -8,39 +8,39 @@ This week has two hard deliverables — a working sign-up/sign-in + daily report
 
 ## Track A: Ship sign-up, sign-in, and daily reporting
 
-| Day | Task | Status |
-| --- | --- | --- |
-| Mon | Confirm Supabase auth provider (email/password or magic link) and env vars are correctly wired on Vercel | Not started |
-| Mon | Build/fix sign-up and sign-in pages, session handling, and protected routes | Not started |
-| Tue | Build the daily report submission form (what you did, blockers, links) | Not started |
-| Tue | Create Supabase table for reports tied to user id; set Row Level Security policies | Not started |
-| Wed | Build a simple "my reports" view so a user can see their own history | Not started |
-| Wed | Deploy and smoke-test the full flow end to end with a throwaway test account | Not started |
-| Wed | Fix auth/redirect/RLS bugs found in testing | Not started |
+| Day | Task                                                                                                     | Status      |
+| --- | -------------------------------------------------------------------------------------------------------- | ----------- |
+| Mon | Confirm Supabase auth provider (email/password or magic link) and env vars are correctly wired on Vercel | Complete    |
+| Mon | Build/fix sign-up and sign-in pages, session handling, and protected routes                              | Complete    |
+| Tue | Build the daily report submission form (what you did, blockers, links)                                   | Not started |
+| Tue | Create Supabase table for reports tied to user id; set Row Level Security policies                       | Not started |
+| Wed | Build a simple "my reports" view so a user can see their own history                                     | Not started |
+| Wed | Deploy and smoke-test the full flow end to end with a throwaway test account                             | Not started |
+| Wed | Fix auth/redirect/RLS bugs found in testing                                                              | Not started |
 
 Goal by Wednesday night: a stranger can sign up, sign in, and submit a report without you walking them through it.
 
 ## Track B: Build early adopter lists
 
-| Day | Task | Status |
-| --- | --- | --- |
-| Mon | DAO list: pull top contributor-heavy DAOs from DeepDAO, note Discord/Discourse links | Not started |
+| Day | Task                                                                                                               | Status      |
+| --- | ------------------------------------------------------------------------------------------------------------------ | ----------- |
+| Mon | DAO list: pull top contributor-heavy DAOs from DeepDAO, note Discord/Discourse links                               | Not started |
 | Tue | Fractional COO list: search LinkedIn for "Fractional COO," pull from Fractional Network / GoFractional directories | Not started |
-| Tue | Async-first startup list: pull from We Work Remotely / Remote OK postings and HN "Who's Hiring" | Not started |
-| Wed | Remote-first under-100 list: filter Wellfound/AngelList by remote + headcount, cross-check Crunchbase stage | Not started |
-| Wed | Consolidate all four into one sheet: name, segment, contact/channel, source, outreach status | Not started |
+| Tue | Async-first startup list: pull from We Work Remotely / Remote OK postings and HN "Who's Hiring"                    | Not started |
+| Wed | Remote-first under-100 list: filter Wellfound/AngelList by remote + headcount, cross-check Crunchbase stage        | Not started |
+| Wed | Consolidate all four into one sheet: name, segment, contact/channel, source, outreach status                       | Not started |
 
 Target: 15-25 named contacts per segment by Wednesday night, enough to sustain outreach through Friday without running out.
 
 ## Track C: Outreach
 
-| Day | Task | Status |
-| --- | --- | --- |
-| Thu | Write one short outreach message per segment (problem framing + ask for a 20-min call) | Not started |
-| Thu | Set up a scheduling link (Calendly or similar) to remove back-and-forth | Not started |
-| Thu | Send first batch: aim for 10-15 outreach messages | Not started |
-| Fri | Send second batch: another 10-15 | Not started |
-| Fri / ongoing | Reply to any responses same day; book calls for next week | Not started |
+| Day           | Task                                                                                   | Status      |
+| ------------- | -------------------------------------------------------------------------------------- | ----------- |
+| Thu           | Write one short outreach message per segment (problem framing + ask for a 20-min call) | Not started |
+| Thu           | Set up a scheduling link (Calendly or similar) to remove back-and-forth                | Not started |
+| Thu           | Send first batch: aim for 10-15 outreach messages                                      | Not started |
+| Fri           | Send second batch: another 10-15                                                       | Not started |
+| Fri / ongoing | Reply to any responses same day; book calls for next week                              | Not started |
 
 Don't wait for the product to be perfect before sending outreach — Track A only needs to be far enough along that you can demo it live or describe it concretely, not fully polished.
 
@@ -48,13 +48,13 @@ Don't wait for the product to be perfect before sending outreach — Track A onl
 
 These don't take long individually but each one determines whether a good call turns into a pilot or just a nice conversation.
 
-| Day | Task | Status |
-| --- | --- | --- |
-| Wed | Draft a one-page pilot pitch: what a pilot means, what's asked of them (X weeks, Y minutes/week), what they get back | Not started |
+| Day | Task                                                                                                                                                                 | Status      |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Wed | Draft a one-page pilot pitch: what a pilot means, what's asked of them (X weeks, Y minutes/week), what they get back                                                 | Not started |
 | Wed | Write 5-8 discovery-call questions that test the problem before you pitch the solution (how do they track work now, what's broken about it, who else feels the pain) | Not started |
-| Wed | Decide one pilot success metric up front (e.g., X teams submitting weekly reports for 4 straight weeks) | Not started |
-| Thu | Add a bare-bones privacy note/terms to the site before real users sign up with real data | Not started |
-| Thu | Update site copy so it reads as "weekly contribution reports," not generic time tracking or a to-do app | Not started |
+| Wed | Decide one pilot success metric up front (e.g., X teams submitting weekly reports for 4 straight weeks)                                                              | Not started |
+| Thu | Add a bare-bones privacy note/terms to the site before real users sign up with real data                                                                             | Not started |
+| Thu | Update site copy so it reads as "weekly contribution reports," not generic time tracking or a to-do app                                                              | Not started |
 
 The discovery questions matter most: on early calls, spend the first 10 minutes listening before you pitch. If the problem doesn't hurt them the way you assumed, better to learn that now than after building the pilot.
 
