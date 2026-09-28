@@ -6,6 +6,7 @@
 import { escapeHtml, fileSizeLabel, formatFullDayLabel } from "./format";
 import { summarizeDay } from "../../ai/frontend/summarize";
 import { shortenAiReply } from "../../ai/shorten_ai_reply";
+import { renderReportCard } from "./report_card";
 import { userNotes, type DayEntry, type FileAttachment, type NoteEntry } from "./types";
 
 const READY_MARK =
@@ -96,6 +97,12 @@ export function renderDayEntry(options: DayEntryOptions): HTMLElement {
   });
 
   section.append(header, preview, details);
+  // The day's saved report sits at the bottom of the day.
+  if (entry.finalReport) {
+    section.append(
+      renderReportCard({ startDate: entry.date, endDate: entry.date, report: entry.finalReport }),
+    );
+  }
   return section;
 
   function confirmDeleteFile(date: string, file: FileAttachment) {
@@ -132,32 +139,8 @@ export function renderDayEntry(options: DayEntryOptions): HTMLElement {
 
     if (entry.links.length > 0) wrapper.append(renderLinkChips(entry.links));
 
-    wrapper.append(isEditable ? renderEditableFields() : renderReadOnlyFields());
+    if (isEditable) wrapper.append(renderEditableFields());
     return wrapper;
-  }
-
-  function renderReadOnlyFields(): HTMLElement {
-    const readOnly = document.createElement("div");
-    readOnly.className = "day-entry-readonly";
-
-    if (entry.nextSteps.length > 0) {
-      const block = document.createElement("div");
-      block.className = "day-entry-field";
-      const items = entry.nextSteps
-        .map((task) => `<li>${escapeHtml(task.title)} — ${task.minutes} min</li>`)
-        .join("");
-      block.innerHTML = `<h4>Next steps</h4><ul>${items}</ul>`;
-      readOnly.append(block);
-    }
-
-    if (readOnly.children.length === 0) {
-      const empty = document.createElement("p");
-      empty.className = "day-entry-empty";
-      empty.textContent = "No report was saved for this day.";
-      readOnly.append(empty);
-    }
-
-    return readOnly;
   }
 
   function renderEditableFields(): HTMLElement {

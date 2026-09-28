@@ -3,14 +3,16 @@ import { streamAi } from "./client";
 export type ReportEvent =
   | { type: "progress"; message: string }
   | { type: "delta"; text: string }
-  | { type: "done"; report: string }
+  | { type: "done"; report: string; saved: boolean }
   | { type: "error"; message: string };
 
-// Generates (and saves) the AI report for a day. onEvent receives progress updates, the
-// report text as it's written, and finally the whole report. Resolves to the report, or
-// null if it couldn't be generated.
+// Generates the AI report for a period: one day (pass the same date twice; the report is
+// saved to that day) or a week. onEvent receives progress updates, the report text as
+// it's written, and finally the whole report. Resolves to the report, or null if it
+// couldn't be generated.
 export async function generateReport(
-  date: string,
+  startDate: string,
+  endDate: string,
   onEvent: (event: ReportEvent) => void,
 ): Promise<string | null> {
   let report: string | null = null;
@@ -18,7 +20,7 @@ export async function generateReport(
   let handled = 0;
   const raw = await streamAi(
     "/api/generate-report",
-    { date, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+    { startDate, endDate, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
     // The server sends one JSON event per line; handle each complete line once.
     (textSoFar) => {
       const lines = textSoFar.split("\n");

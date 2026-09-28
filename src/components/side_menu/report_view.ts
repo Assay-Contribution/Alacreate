@@ -1,11 +1,57 @@
-/*  A large dialog that generates the AI report for a day and shows it: progress while the
-    documents are read, then the report as it's written. The report is saved to the day
-    automatically. Editing and PDF export will be added here later.
+/*  A large dialog for reports. openReportView generates a daily or weekly report and shows
+    it: progress while the documents are read, then the report as it's written. It's saved
+    automatically (replacing any earlier one). showSavedReport opens one that's already
+    saved. Either way, once there's a report it can be downloaded as an editable PDF.
 */
 import { generateReport } from "../../ai/frontend/report";
 import { escapeHtml, formatFullDayLabel } from "../timeline/format";
+import { downloadReportPdf } from "./report_pdf";
 
-export function openReportView(date: string): void {
+// Pass the same date twice for a daily report, or a week's first and last day. onSaved is
+// called with the report once it has been saved.
+export function openReportView(
+  startDate: string,
+  endDate: string,
+  onSaved?: (report: string) => void,
+): void {
+  const dialog = createReportDialog(startDate, endDate);
+  dialog.status.textContent = "Starting…";
+
+  // Closing early is fine: the report still finishes and is saved on the server.
+  let written = "";
+  void generateReport(startDate, endDate, (event) => {
+    if (event.type === "progress") {
+      dialog.status.textContent = event.message;
+    } else if (event.type === "delta") {
+      written += event.text;
+      dialog.body.innerHTML = renderMarkdown(written);
+    } else if (event.type === "done") {
+      dialog.status.textContent = event.saved ? "Report saved." : "Report ready (it couldn't be saved).";
+      dialog.showReport(event.report);
+      if (event.saved) onSaved?.(event.report);
+    } else {
+      dialog.status.textContent = event.message;
+      dialog.status.classList.add("is-error");
+    }
+  });
+}
+
+export function showSavedReport(startDate: string, endDate: string, report: string): void {
+  const dialog = createReportDialog(startDate, endDate);
+  dialog.status.textContent = startDate === endDate ? "Daily report" : "Weekly report";
+  dialog.showReport(report);
+}
+
+// e.g. daily-report-2026-09-24.pdf or weekly-report-2026-09-21.pdf
+export function reportFileName(startDate: string, endDate: string): string {
+  return `${startDate === endDate ? "daily" : "weekly"}-report-${startDate}.pdf`;
+}
+
+function createReportDialog(startDate: string, endDate: string) {
+  const label =
+    startDate === endDate
+      ? formatFullDayLabel(startDate)
+      : `the week of ${formatFullDayLabel(startDate)}`;
   const previousFocus = document.activeElement as HTMLElement | null;
 
   const overlay = document.createElement("div");
@@ -15,22 +61,28 @@ export function openReportView(date: string): void {
   dialog.className = "report-view";
   dialog.setAttribute("role", "dialog");
   dialog.setAttribute("aria-modal", "true");
-  dialog.setAttribute("aria-label", `Report for ${formatFullDayLabel(date)}`);
+  dialog.setAttribute("aria-label", `Report for ${label}`);
 
   const status = document.createElement("p");
   status.className = "report-view-status";
   status.setAttribute("aria-live", "polite");
-  status.textContent = "Starting…";
 
   const body = document.createElement("div");
   body.className = "report-view-body";
 
   const actions = document.createElement("div");
   actions.className = "day-selection-actions";
+
+  const pdfButton = document.createElement("button");
+  pdfButton.type = "button";
+  pdfButton.className = "is-primary";
+  pdfButton.textContent = "Download editable PDF";
+  pdfButton.hidden = true;
+
   const closeButton = document.createElement("button");
   closeButton.type = "button";
   closeButton.textContent = "Close";
-  actions.append(closeButton);
+  actions.append(closeButton, pdfButton);
 
   dialog.append(status, body, actions);
   overlay.append(dialog);
@@ -52,22 +104,21 @@ export function openReportView(date: string): void {
   document.body.append(overlay);
   closeButton.focus();
 
-  // Closing early is fine: the report still finishes and is saved on the server.
-  let written = "";
-  void generateReport(date, (event) => {
-    if (event.type === "progress") {
-      status.textContent = event.message;
-    } else if (event.type === "delta") {
-      written += event.text;
-      body.innerHTML = renderMarkdown(written);
-    } else if (event.type === "done") {
-      status.textContent = "Report saved to this day.";
-      body.innerHTML = renderMarkdown(event.report);
-    } else {
-      status.textContent = event.message;
-      status.classList.add("is-error");
-    }
+  let report = "";
+  pdfButton.addEventListener("click", () => {
+    void downloadReportPdf(report, reportFileName(startDate, endDate));
   });
+
+  return {
+    status,
+    body,
+    // Shows the finished report and enables the PDF download.
+    showReport(markdown: string) {
+      report = markdown;
+      body.innerHTML = renderMarkdown(markdown);
+      pdfButton.hidden = false;
+    },
+  };
 }
 
 // Renders the small Markdown subset the report uses (headings, bullets, bold, paragraphs).

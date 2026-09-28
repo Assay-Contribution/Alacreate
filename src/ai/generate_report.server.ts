@@ -1,16 +1,19 @@
-/*  Generates a day's report. Collection uses the fast model (CHAT_MODEL): each document the
-    user uploaded that day gets a short brief (what it's about, key points, whether the user
-    likely wrote it). Writing uses the stronger model (REPORT_MODEL) with the day's messages
-    and those briefs. The finished report is saved to contribution_reports.final_report.
+/*  Generates a daily or weekly report. Collection uses the fast model (CHAT_MODEL): each
+    document the user uploaded in the period gets a short brief (what it's about, key points,
+    whether the user likely wrote it). Writing uses the stronger model (REPORT_MODEL) with
+    the period's messages and those briefs. A daily report is saved to that day's
+    contribution_reports.final_report; a weekly report to weekly_reports
+    (schema_weekly_reports.sql). Generating again replaces the saved report.
 
-    POST /api/generate-report { date, timeZone } streams newline-delimited JSON events:
+    POST /api/generate-report { startDate, endDate, timeZone } (the same date twice for a
+    daily report) streams newline-delimited JSON events:
       { type: "progress", message }  what it's working on
       { type: "delta", text }         the report as it's written
-      { type: "done", report }        the full report (also saved)
+      { type: "done", report, saved } the full report, and whether it was saved
       { type: "error", message }
     Everything runs as the signed-in user, so Row Level Security limits it to their data. */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getMessages, supabaseMessageSource } from "./mcp/get_messages.server";
+import { getMessages } from "./mcp/get_messages.server";
 import {
   bearerToken,
   chat,
@@ -28,7 +31,9 @@ const OPENING_SECTIONS = 3;
 const SAMPLED_SECTIONS = 5;
 const CONTEXT_WINDOW_MS = 10 * 60 * 1000;
 const BRIEF_MAX_TOKENS = 400;
-const REPORT_MAX_TOKENS = 1800;
+const DAILY_REPORT_MAX_TOKENS = 1800;
+const WEEKLY_REPORT_MAX_TOKENS = 2500;
+const MAX_PERIOD_DAYS = 31;
 
 const BRIEF_PROMPT =
   "You are gathering material for a daily work report. You'll get excerpts from a " +
@@ -40,7 +45,7 @@ const BRIEF_PROMPT =
   "evidence (e.g. what they said when uploading it, or that it's a published work).\n" +
   "Only use what's in the excerpts and messages.";
 
-const REPORT_PROMPT =
+const DAILY_REPORT_PROMPT =
   "You write a daily work report from the user's notes for the day, your own earlier " +
   "replies to them (marked AI), and briefs of documents they uploaded. Write Markdown " +
   "with these sections, leaving out any that would be empty:\n" +
@@ -56,6 +61,23 @@ const REPORT_PROMPT =
   "them (like a story) are requests, not their work. Write in a plain, direct past tense " +
   "without \"the user\" (e.g. \"Reviewed the schema.\"). Keep it under 500 words.";
 
+const WEEKLY_REPORT_PROMPT =
+  "You write a weekly work report from the user's notes for each day of the week, your " +
+  "own earlier replies to them (marked AI), and briefs of documents they uploaded. Write " +
+  "Markdown with these sections, leaving out any that would be empty:\n" +
+  "# <the Title line from the material, exactly>\n" +
+  "## Summary: 3-5 sentences on the week as a whole.\n" +
+  "## Highlights: the most significant things accomplished, as bullets.\n" +
+  "## Day by day: one short bullet per day that had activity, starting with the day " +
+  "(e.g. \"Monday: ...\"); skip days with nothing logged.\n" +
+  "## Documents: one bullet per document: what it is, whether the user likely wrote it " +
+  "(with the evidence), and how it relates to the week.\n" +
+  "## Open items: things mentioned but not finished by the end of the week.\n" +
+  "Rules: state only what the material supports and don't invent details. Only count " +
+  "something as the user's work if their notes say they did it; things the AI wrote for " +
+  "them (like a story) are requests, not their work. Write in a plain, direct past tense " +
+  "without \"the user\". Keep it under 700 words.";
+
 type Note = { text: string; addedAt: string; author?: "assistant" };
 type UploadedFile = { name: string; path: string; addedAt: string };
 type FileRow = {
@@ -70,8 +92,9 @@ type FileRow = {
 type ReportEvent =
   | { type: "progress"; message: string }
   | { type: "delta"; text: string }
-  | { type: "done"; report: string }
+  | { type: "done"; report: string; saved: boolean }
   | { type: "error"; message: string };
+type DayRow = { report_date: string; notes: Note[] | null; files: UploadedFile[] | null };
 
 export async function handleGenerateReport(request: Request): Promise<Response> {
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -84,9 +107,13 @@ export async function handleGenerateReport(request: Request): Promise<Response> 
   const { data: auth } = await userDb.auth.getUser(token);
   if (!auth.user) return json({ error: "Unauthorized" }, 401);
 
-  const body = (await readJson(request)) as { date?: unknown; timeZone?: unknown } | null;
-  const date = typeof body?.date === "string" ? body.date : "";
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ error: "Invalid date" }, 400);
+  const body = (await readJson(request)) as Record<string, unknown> | null;
+  const startDate = isDate(body?.startDate) ? body.startDate : "";
+  const endDate = isDate(body?.endDate) ? body.endDate : "";
+  if (!startDate || !endDate || startDate > endDate) return json({ error: "Invalid dates" }, 400);
+  if (daysBetween(startDate, endDate) >= MAX_PERIOD_DAYS) {
+    return json({ error: `Reports cover at most ${MAX_PERIOD_DAYS} days` }, 400);
+  }
   const timeZone = typeof body?.timeZone === "string" && isTimeZone(body.timeZone) ? body.timeZone : "UTC";
 
   const encoder = new TextEncoder();
@@ -95,7 +122,7 @@ export async function handleGenerateReport(request: Request): Promise<Response> 
       const send = (event: ReportEvent) =>
         controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
       try {
-        await generateReport(userDb, date, timeZone, send);
+        await generateReport(userDb, auth.user.id, startDate, endDate, timeZone, send);
       } catch (error) {
         console.error("[generate_report]", error);
         send({ type: "error", message: "Something went wrong while generating the report." });
@@ -110,32 +137,46 @@ export async function handleGenerateReport(request: Request): Promise<Response> 
 
 async function generateReport(
   db: SupabaseClient,
-  date: string,
+  userId: string,
+  startDate: string,
+  endDate: string,
   timeZone: string,
   send: (event: ReportEvent) => void,
 ): Promise<void> {
-  send({ type: "progress", message: "Gathering the day's messages…" });
-  const { data: day } = await db
+  const daily = startDate === endDate;
+  send({ type: "progress", message: daily ? "Gathering the day's messages…" : "Gathering the week's messages…" });
+  const { data } = await db
     .from("contribution_reports")
-    .select("notes, files")
-    .eq("report_date", date)
-    .maybeSingle();
-  const notes: Note[] = day?.notes ?? [];
-  const uploads: UploadedFile[] = day?.files ?? [];
-  if (notes.length === 0 && uploads.length === 0) {
-    send({ type: "error", message: "Nothing was logged on this day, so there's nothing to report." });
+    .select("report_date, notes, files")
+    .gte("report_date", startDate)
+    .lte("report_date", endDate)
+    .order("report_date");
+  const days = (data ?? []) as DayRow[];
+  const notesByDate = new Map(days.map((day) => [day.report_date, day.notes ?? []]));
+  const uploads = days.flatMap((day) =>
+    (day.files ?? []).map((file) => ({ ...file, date: day.report_date })),
+  );
+  if (days.every((day) => !day.notes?.length) && uploads.length === 0) {
+    send({
+      type: "error",
+      message: `Nothing was logged ${daily ? "on this day" : "this week"}, so there's nothing to report.`,
+    });
     return;
   }
 
   // The AI's own replies are shortened to two lines: the report is about the user's work.
-  const messages = notes.length
-    ? await getMessages(supabaseMessageSource(db), { date, fullAiReplies: false, timeZone })
-    : "No messages were written this day.";
+  const source = { getNotes: async (date: string) => notesByDate.get(date) ?? null };
+  const messages: string[] = [];
+  for (const day of days) {
+    if (!day.notes?.length) continue;
+    messages.push(await getMessages(source, { date: day.report_date, fullAiReplies: false, timeZone }));
+  }
 
   const { data: rows } = await db
     .from("files")
     .select("id, name, path, status, error, chunk_count, page_count")
-    .eq("report_date", date);
+    .gte("report_date", startDate)
+    .lte("report_date", endDate);
   const fileRows = new Map(((rows ?? []) as FileRow[]).map((row) => [row.path, row]));
 
   const briefs: string[] = [];
@@ -143,30 +184,34 @@ async function generateReport(
     const row = fileRows.get(upload.path);
     if (row?.status !== "ready") {
       briefs.push(
-        `Document: ${upload.name}\nNot readable (${row?.error ?? "it hasn't been processed"}); only the name is known.`,
+        `Document: ${upload.name} (uploaded ${upload.date})\nNot readable (${row?.error ?? "it hasn't been processed"}); only the name is known.`,
       );
       continue;
     }
     send({ type: "progress", message: `Reading ${upload.name}…` });
-    briefs.push(await briefDocument(db, row, nearbyMessages(notes, upload.addedAt, timeZone)));
+    const context = nearbyMessages(notesByDate.get(upload.date) ?? [], upload.addedAt, timeZone);
+    briefs.push(`${await briefDocument(db, row, context)}\nUploaded: ${upload.date}`);
   }
 
   send({ type: "progress", message: "Writing the report…" });
+  const title = daily
+    ? `Daily report: ${longDate(startDate)}`
+    : `Weekly report: ${shortDate(startDate)} – ${shortDate(endDate)}`;
   const material = [
-    `Title: Daily report: ${longDate(date)}`,
-    `Messages (times are ${timeZone}):\n${messages}`,
+    `Title: ${title}`,
+    `Messages (times are ${timeZone}):\n\n${messages.join("\n\n") || "No messages were written."}`,
     briefs.length ? `Documents uploaded:\n\n${briefs.join("\n\n")}` : "No documents were uploaded.",
   ].join("\n\n");
 
   let report = "";
   for await (const text of streamChatWithTools(
     [
-      { role: "system", content: REPORT_PROMPT },
+      { role: "system", content: daily ? DAILY_REPORT_PROMPT : WEEKLY_REPORT_PROMPT },
       { role: "user", content: material },
     ],
     [],
     async () => "",
-    REPORT_MAX_TOKENS,
+    daily ? DAILY_REPORT_MAX_TOKENS : WEEKLY_REPORT_MAX_TOKENS,
     undefined,
     REPORT_MODEL,
   )) {
@@ -179,9 +224,21 @@ async function generateReport(
     return;
   }
 
-  const { error } = await db.from("contribution_reports").update({ final_report: report }).eq("report_date", date);
+  // Save it, replacing any earlier report for the same day or week.
+  const { error } = daily
+    ? await db.from("contribution_reports").update({ final_report: report }).eq("report_date", startDate)
+    : await db.from("weekly_reports").upsert(
+        {
+          user_id: userId,
+          week_start: startDate,
+          week_end: endDate,
+          report,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,week_start" },
+      );
   if (error) console.error("[generate_report] couldn't save report", error);
-  send({ type: "done", report });
+  send({ type: "done", report, saved: !error });
 }
 
 // Reads the opening of a processed document plus samples from the rest, and asks the fast
@@ -253,6 +310,24 @@ function longDate(date: string): string {
     year: "numeric",
     timeZone: "UTC",
   });
+}
+
+function shortDate(date: string): string {
+  return new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function isDate(value: unknown): value is string {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function daysBetween(start: string, end: string): number {
+  return Math.round((Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / 86_400_000);
 }
 
 function isTimeZone(zone: string): boolean {

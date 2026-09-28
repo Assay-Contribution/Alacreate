@@ -85,7 +85,13 @@ export function renderComposer(options: ComposerOptions): void {
   const submitButton = document.createElement("button");
   submitButton.type = "button";
   submitButton.className = "composer-submit";
-  submitButton.textContent = "Add";
+  submitButton.setAttribute("aria-label", "Upload");
+  // Shown as a label above the button on hover (see .composer-submit::after).
+  submitButton.dataset.tooltip = "Upload";
+  submitButton.innerHTML = `
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" />
+    </svg>`;
 
   submitButton.addEventListener("click", async () => {
     const text = textInput.value.trim();

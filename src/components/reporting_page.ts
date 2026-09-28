@@ -4,7 +4,7 @@
 */
 import { openReportView } from "./side_menu/report_view";
 import { renderSideMenu } from "./side_menu/side_menu";
-import { initTimeline } from "./timeline/timeline";
+import { initTimeline, type TimelineController } from "./timeline/timeline";
 
 export async function initReportingPage(root: HTMLElement): Promise<void> {
   root.innerHTML = "";
@@ -15,10 +15,17 @@ export async function initReportingPage(root: HTMLElement): Promise<void> {
   timelineContainer.className = "timeline-page-root";
   root.append(sideMenuContainer, timelineContainer);
 
+  // Newly generated reports appear in the timeline as soon as they're saved.
+  let timeline: TimelineController | undefined;
   renderSideMenu({
     container: sideMenuContainer,
-    onGenerateReport: (date) => openReportView(date),
+    onDailyReport: (date) =>
+      openReportView(date, date, (report) => timeline?.showDailyReport(date, report)),
+    onWeeklyReport: (startDate, endDate) =>
+      openReportView(startDate, endDate, (report) =>
+        timeline?.showWeeklyReport(startDate, endDate, report),
+      ),
   });
 
-  await initTimeline(timelineContainer);
+  timeline = await initTimeline(timelineContainer);
 }

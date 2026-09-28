@@ -15,6 +15,7 @@ import { askAssistant } from "../../ai/frontend/assistant";
 import { deleteFileFromSearch, getReadyFiles, processUploadedFile } from "../../ai/frontend/files";
 import { indexMessagesForSearch, removeMessageFromSearch } from "../../ai/frontend/messages";
 import { renderDayEntry } from "./day_entry";
+import { renderReportCard } from "./report_card";
 import { formatFullDayLabel, localIsoDate } from "./format";
 import { renderComposer } from "./inuputs";
 import { renderTimeSelect, type TimeSelectController } from "./time_select";
@@ -22,7 +23,20 @@ import { createEmptyDayEntry, type DayEntry, type FileAttachment, type NoteEntry
 
 const STORAGE_BUCKET = "report-attachments";
 
-export async function initTimeline(root: HTMLElement): Promise<void> {
+// Lets the page show a newly generated report without reloading the timeline.
+export type TimelineController = {
+  showDailyReport: (date: string, report: string) => void;
+  showWeeklyReport: (weekStart: string, weekEnd: string, report: string) => void;
+};
+
+const NO_TIMELINE: TimelineController = {
+  showDailyReport: () => {},
+  showWeeklyReport: () => {},
+};
+
+type WeeklyReport = { weekEnd: string; report: string };
+
+export async function initTimeline(root: HTMLElement): Promise<TimelineController> {
   root.innerHTML = "";
   root.classList.add("timeline-root");
 
@@ -61,14 +75,14 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
 
   if (!supabaseClient) {
     dayList.innerHTML = `<p class="timeline-error">Timeline is not available right now.</p>`;
-    return;
+    return NO_TIMELINE;
   }
 
   const { data: sessionData } = await supabaseClient.auth.getSession();
   const userId = sessionData.session?.user.id;
   if (!userId) {
     dayList.innerHTML = `<p class="timeline-error">Sign in to see your timeline.</p>`;
-    return;
+    return NO_TIMELINE;
   }
 
   const entries = await loadEntries(userId);
@@ -76,6 +90,7 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
   const readyFiles = await getReadyFiles(
     Array.from(entries.values()).flatMap((entry) => entry.files.map((file) => file.path)),
   );
+  const weeklyReports = await loadWeeklyReports();
   const today = localIsoDate();
   if (!entries.has(today)) entries.set(today, createEmptyDayEntry(today));
 
@@ -229,7 +244,21 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
     });
   };
 
+  // Each weekly report sits after the last day of its week that's in the timeline.
+  const placeWeeklyReports = () => {
+    dayList.querySelectorAll(".report-card.is-weekly").forEach((card) => card.remove());
+    const dates = sortedDates();
+    weeklyReports.forEach(({ weekEnd, report }, weekStart) => {
+      const lastDay = dates.filter((date) => date >= weekStart && date <= weekEnd).pop();
+      if (!lastDay) return;
+      dayElements
+        .get(lastDay)
+        ?.after(renderReportCard({ startDate: weekStart, endDate: weekEnd, report }));
+    });
+  };
+
   renderDays();
+  placeWeeklyReports();
 
   const timeSelect: TimeSelectController = renderTimeSelect({
     container: timeSelectContainer,
@@ -322,6 +351,32 @@ export async function initTimeline(root: HTMLElement): Promise<void> {
     timeSelect.setActiveDate(today);
     stickyHeader.textContent = formatFullDayLabel(today);
   }
+
+  return {
+    showDailyReport(date, report) {
+      const entry = entries.get(date);
+      if (!entry) return;
+      entry.finalReport = report;
+      rerenderDay(date);
+    },
+    showWeeklyReport(weekStart, weekEnd, report) {
+      weeklyReports.set(weekStart, { weekEnd, report });
+      placeWeeklyReports();
+    },
+  };
+}
+
+// Saved weekly reports, keyed by the week's first day.
+async function loadWeeklyReports(): Promise<Map<string, WeeklyReport>> {
+  const reports = new Map<string, WeeklyReport>();
+  if (!supabaseClient) return reports;
+  const { data, error } = await supabaseClient
+    .from("weekly_reports")
+    .select("week_start, week_end, report");
+  // Fails if schema_weekly_reports.sql hasn't been run yet; the timeline works without it.
+  if (error || !data) return reports;
+  data.forEach((row) => reports.set(row.week_start, { weekEnd: row.week_end, report: row.report }));
+  return reports;
 }
 
 async function loadEntries(userId: string): Promise<Map<string, DayEntry>> {
@@ -330,7 +385,7 @@ async function loadEntries(userId: string): Promise<Map<string, DayEntry>> {
 
   const { data, error } = await supabaseClient
     .from("contribution_reports")
-    .select("*")
+    .select("report_date, final_report, links, files, notes")
     .eq("user_id", userId)
     .order("report_date", { ascending: true });
 
@@ -339,10 +394,6 @@ async function loadEntries(userId: string): Promise<Map<string, DayEntry>> {
   data.forEach((row) => {
     entries.set(row.report_date, {
       date: row.report_date,
-      northStar: row.north_star ?? "",
-      nextSteps: row.next_steps ?? [],
-      morningReport: row.morning_report ?? null,
-      middayReport: row.midday_report ?? null,
       finalReport: row.final_report ?? null,
       links: row.links ?? [],
       files: row.files ?? [],
