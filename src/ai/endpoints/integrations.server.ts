@@ -1,5 +1,5 @@
 /*  OAuth for the apps the AI can connect to. Each app's details (sign-in URL, token exchange)
-    live in its own file in src/components/integrations/; this file runs the flow. Replaces the
+    live in its own file in src/helpers/integrations/; this file runs the flow. Replaces the
     session-based flow in oauth_test/app.js with one that works on Vercel's stateless functions:
       1. POST /api/integrations { provider }: the signed-in user starts a connection. We set a
          short-lived signed cookie saying who they are and return the provider's sign-in URL.
@@ -13,7 +13,7 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { json, readJson } from "../lib/http.server";
 import { createAdminClient, signedInUserId } from "../lib/supabase.server";
-import { findIntegration, type Integration } from "../../components/integrations";
+import { findIntegration, type Integration } from "../../helpers/integrations";
 
 const STATE_COOKIE = "oauth_state";
 const STATE_TTL_SECONDS = 10 * 60;

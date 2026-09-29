@@ -2,7 +2,7 @@
     endpoints/integrations.server.ts), and working access tokens for the AI's tools.
     Tokens are read with the admin client because the table has no RLS policies: only the
     server may see them. Always pass a user id that came from a verified login. Server-only. */
-import { findIntegration } from "../../components/integrations";
+import { findIntegration } from "../../helpers/integrations";
 import { createAdminClient } from "./supabase.server";
 
 // Refresh a little early so a token doesn't expire in the middle of a tool call.

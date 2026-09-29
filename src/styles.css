@@ -1,3 +1,8 @@
+/*  All of the site's styles in one file: the shared theme colors and fonts (:root), the nav
+    and page layout, then sections for the Manifesto, Sign up, the timeline and report
+    dialogs, and the Integrations page, plus phone-size adjustments (max-width: 720px). The
+    Reporting and Integrations pages' app layout starts at "Reporting and Integrations pages". */
+
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,500;1,500&display=swap");
 
 :root {
@@ -1434,94 +1439,43 @@ footer {
   background: var(--accent-soft);
 }
 
-/* Reporting timeline page: full-bleed, futuristic theme */
+/* Reporting and Integrations pages: full-bleed app layout in the site theme */
 body.reporting-body {
   height: 100vh;
   overflow: hidden;
   margin: 0;
-  background: radial-gradient(circle at 20% -10%, #1b1440 0%, #05060f 55%, #020208 100%);
-  color: #e7e8ff;
+  background: var(--paper);
+  color: var(--ink);
 }
 .timeline-page {
-  width: 100%;
-  max-width: none;
+  width: min(100%, 90rem);
   height: 100vh;
-  margin: 0;
-  padding: 0;
+  margin: 0 auto;
+  padding: 0 5vw;
   display: flex;
   flex-direction: column;
 }
 .timeline-page .site-nav {
   flex: 0 0 auto;
-  padding: 20px 4vw;
-  border-bottom: 1px solid rgba(140, 130, 255, 0.25);
 }
-.timeline-page .wordmark,
-.timeline-page .nav-link,
-.timeline-page .menu-toggle {
-  color: #e7e8ff;
-  font-family: "Space Grotesk", sans-serif;
-}
-.timeline-page .nav-link.active {
-  color: #7ef9ff;
-}
-.timeline-page .nav-link.active::after {
-  background: #7ef9ff;
-  box-shadow: 0 0 8px rgba(126, 249, 255, 0.8);
-}
-.timeline-page .nav-link span {
-  color: #7ef9ff;
-}
-.timeline-page .wordmark {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-.timeline-page .wordmark span {
-  font-style: italic;
-  font-weight: 700;
-  color: #7ef9ff;
-  text-shadow:
-    0 0 8px rgba(126, 249, 255, 0.85),
-    0 0 22px rgba(126, 249, 255, 0.4);
-}
-.timeline-page .wordmark:hover span {
-  text-shadow:
-    0 0 10px rgba(126, 249, 255, 1),
-    0 0 30px rgba(126, 249, 255, 0.6);
-}
+/* Same heading as the Manifesto and Sign up pages ("Take *part.*"), smaller so the tool
+   below gets the room. */
 .timeline-page-header {
   flex: 0 0 auto;
-  padding: 22px 4vw 0;
+  padding: 2.25rem 0 0;
 }
 .timeline-page-header .eyebrow {
-  font-family: "Rajdhani", sans-serif;
-  letter-spacing: 0.3em;
-  color: #7ef9ff;
+  margin-bottom: 0.875rem;
 }
 .timeline-page-header h1 {
-  font-family: "Space Grotesk", sans-serif;
-  font-size: clamp(1.8rem, 3.4vw, 3rem);
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  margin: 6px 0 0;
-  color: #f2f3ff;
-}
-.timeline-page-header h1 strong {
-  font-weight: 700;
-  font-style: italic;
-  letter-spacing: 0.01em;
-}
-.timeline-page-header h1 em {
-  font-family: "Space Grotesk", sans-serif;
-  font-style: normal;
-  color: #7ef9ff;
-  text-shadow: 0 0 18px rgba(126, 249, 255, 0.55);
+  font-size: clamp(2.25rem, 3.4vw, 3.5rem);
+  line-height: 1;
+  margin: 0;
 }
 .timeline-page-root {
   flex: 1 1 auto;
   min-height: 0;
-  padding: 18px 4vw 22px;
+  padding: 1.5rem 0 1.75rem;
 }
 /* Reporting page body: side menu on the left, timeline filling the rest. */
 .reporting-page {
@@ -1529,7 +1483,7 @@ body.reporting-body {
   min-height: 0;
   display: flex;
   gap: 18px;
-  padding: 18px 4vw 22px;
+  padding: 1.5rem 0 1.75rem;
 }
 .reporting-page > .timeline-page-root {
   flex: 1 1 auto;
@@ -1556,11 +1510,11 @@ body.reporting-body {
   width: 100%;
   margin: 0;
   padding: 12px 14px;
-  border: 1px solid rgba(126, 249, 255, 0.25);
+  border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(15, 16, 35, 0.72);
-  color: #e7e8ff;
-  font-family: "Space Grotesk", sans-serif;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  color: var(--ink);
+  font-family: "Manrope", sans-serif;
   font-size: 0.8rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -1568,10 +1522,9 @@ body.reporting-body {
   transition: border-color 180ms ease, box-shadow 180ms ease, color 180ms ease;
 }
 .side-menu .side-menu-button:hover {
-  background: rgba(15, 16, 35, 0.72);
-  border-color: #7ef9ff;
-  color: #7ef9ff;
-  box-shadow: 0 0 14px rgba(126, 249, 255, 0.25);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
   transform: none;
 }
 .side-menu .side-menu-button svg {
@@ -1605,7 +1558,7 @@ body.reporting-body {
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgba(2, 2, 8, 0.6);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(3px);
 }
 .day-selection {
@@ -1614,16 +1567,15 @@ body.reporting-body {
   flex-direction: column;
   gap: 16px;
   padding: 22px;
-  border: 1px solid rgba(126, 249, 255, 0.3);
+  border: 1px solid var(--line);
   border-radius: 16px;
-  background: #0f1023;
-  color: #e7e8ff;
-  box-shadow: 0 0 40px rgba(83, 79, 209, 0.35);
+  background: var(--surface-strong);
+  color: var(--ink);
 }
 .day-selection h2 {
   margin: 0;
-  color: #7ef9ff;
-  font-family: "Space Grotesk", sans-serif;
+  color: var(--accent);
+  font-family: "Manrope", sans-serif;
   font-size: 1.05rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1633,7 +1585,7 @@ body.reporting-body {
   flex-direction: column;
   gap: 6px;
   margin: 0;
-  color: #a9acdf;
+  color: var(--muted);
   font-size: 0.8rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1641,12 +1593,12 @@ body.reporting-body {
 .day-selection input[type="date"] {
   margin: 0;
   padding: 10px 12px;
-  border: 1px solid rgba(126, 249, 255, 0.3);
+  border: 1px solid var(--line);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.04);
-  color: #e7e8ff;
+  color: var(--ink);
   color-scheme: dark;
-  font-family: "Rajdhani", sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-size: 1rem;
   text-transform: none;
 }
@@ -1658,44 +1610,43 @@ body.reporting-body {
   flex-direction: column;
   gap: 14px;
   padding: 22px;
-  border: 1px solid rgba(126, 249, 255, 0.3);
+  border: 1px solid var(--line);
   border-radius: 16px;
-  background: #0f1023;
-  color: #dfe1ff;
-  box-shadow: 0 0 40px rgba(83, 79, 209, 0.35);
+  background: var(--surface-strong);
+  color: var(--ink);
 }
 .report-view-status {
   margin: 0;
-  color: #7ef9ff;
-  font-family: "Space Grotesk", sans-serif;
+  color: var(--accent);
+  font-family: "Manrope", sans-serif;
   font-size: 0.8rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 .report-view-status.is-error {
-  color: #ff8fa3;
+  color: var(--tertiary);
 }
 .report-view-body {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   padding-right: 6px;
-  font-family: "Rajdhani", sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-size: 1.05rem;
   line-height: 1.5;
 }
 .report-view-body h2 {
   margin: 0 0 10px;
-  color: #7ef9ff;
-  font-family: "Space Grotesk", sans-serif;
+  color: var(--accent);
+  font-family: "Manrope", sans-serif;
   font-size: 1.35rem;
   letter-spacing: -0.01em;
   line-height: 1.2;
 }
 .report-view-body h3 {
   margin: 18px 0 6px;
-  color: #e7e8ff;
-  font-family: "Space Grotesk", sans-serif;
+  color: var(--ink);
+  font-family: "Manrope", sans-serif;
   font-size: 0.85rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1711,12 +1662,12 @@ body.reporting-body {
   margin-bottom: 4px;
 }
 .report-view-body strong {
-  color: #fff;
+  color: var(--ink);
 }
 .day-selection-note {
   margin: -6px 0 0;
-  color: #7ef9ff;
-  font-family: "Space Grotesk", sans-serif;
+  color: var(--accent);
+  font-family: "Manrope", sans-serif;
   font-size: 0.85rem;
   letter-spacing: 0.03em;
 }
@@ -1729,289 +1680,277 @@ body.reporting-body {
   width: auto;
   margin: 0;
   padding: 10px 16px;
-  border: 1px solid rgba(126, 249, 255, 0.3);
+  border: 1px solid var(--line);
   border-radius: 999px;
   background: transparent;
-  color: #e7e8ff;
-  font-family: "Space Grotesk", sans-serif;
+  color: var(--ink);
+  font-family: "Manrope", sans-serif;
   font-size: 0.75rem;
 }
 .day-selection-actions button:hover {
-  background: rgba(126, 249, 255, 0.1);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   transform: none;
 }
 .day-selection-actions button.is-primary {
-  background: #7ef9ff;
-  border-color: #7ef9ff;
-  color: #05060f;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
 }
 .day-selection-actions button.is-primary:hover {
-  background: #2f8fd1;
-  border-color: #2f8fd1;
-  color: #f2f8ff;
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: var(--ink);
 }
 .timeline-page-root.timeline-root {
   height: 100%;
   width: 100%;
-  background: rgba(15, 16, 35, 0.72);
-  border: 1px solid rgba(126, 249, 255, 0.25);
-  border-radius: 16px;
-  box-shadow:
-    0 0 40px rgba(83, 79, 209, 0.25),
-    inset 0 0 60px rgba(83, 79, 209, 0.06);
-  backdrop-filter: blur(6px);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  box-shadow: 0 1.25rem 3.125rem rgba(0, 0, 0, 0.5);
 }
 .timeline-page-root .timeline-sticky-header {
-  background: linear-gradient(to bottom, rgba(15, 16, 35, 0.92) 45%, rgba(15, 16, 35, 0));
-  color: #7ef9ff;
-  font-family: "Space Grotesk", sans-serif;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--surface) 92%, transparent) 45%, transparent);
+  color: var(--accent);
+  font-family: "Manrope", sans-serif;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   font-size: 1.4rem;
-  text-shadow: 0 0 14px rgba(126, 249, 255, 0.35);
 }
 .timeline-page-root .timeline-scroll,
 .timeline-page-root .timeline-time-select-dock,
 .report-view-body {
-  --scrollbar-thumb: rgba(126, 249, 255, 0.4);
-  --scrollbar-thumb-hover: rgba(126, 249, 255, 0.75);
+  --scrollbar-thumb: color-mix(in srgb, var(--accent) 40%, transparent);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--accent) 75%, transparent);
 }
 .timeline-page-root .timeline-time-select-dock {
-  background: rgba(10, 11, 26, 0.55);
-  border-left: 1px solid rgba(126, 249, 255, 0.2);
+  background: color-mix(in srgb, var(--paper) 55%, transparent);
+  border-left: 1px solid var(--line);
 }
 .timeline-page-root .timeline-composer-dock {
-  background: rgba(10, 11, 26, 0.65);
-  border-top: 1px solid rgba(126, 249, 255, 0.2);
+  background: color-mix(in srgb, var(--paper) 65%, transparent);
+  border-top: 1px solid var(--line);
 }
 .timeline-page-root .timeline-error {
-  color: #9fa2d8;
-  font-family: "Rajdhani", sans-serif;
+  color: var(--muted);
+  font-family: "DM Sans", sans-serif;
 }
 .timeline-page-root .day-entry {
-  background: rgba(21, 22, 46, 0.7);
-  border: 1px solid rgba(126, 249, 255, 0.15);
-  font-family: "Rajdhani", sans-serif;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  border: 1px solid var(--line);
+  font-family: "DM Sans", sans-serif;
 }
 .timeline-page-root .report-card {
-  border-color: rgba(126, 249, 255, 0.2);
-  background: rgba(10, 11, 26, 0.55);
+  border-color: var(--line);
+  background: color-mix(in srgb, var(--paper) 55%, transparent);
 }
 .timeline-page-root .report-card.is-weekly {
-  border-color: rgba(126, 249, 255, 0.45);
-  background: rgba(21, 22, 46, 0.7);
-  box-shadow: 0 0 18px rgba(126, 249, 255, 0.12);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
 }
 .timeline-page-root .report-card-text strong {
-  color: #7ef9ff;
-  font-family: "Space Grotesk", sans-serif;
+  color: var(--accent);
+  font-family: "Manrope", sans-serif;
   letter-spacing: 0.03em;
 }
 .timeline-page-root .report-card-text span {
-  color: #a9acdf;
+  color: var(--muted);
 }
 .timeline-page-root .report-card .report-card-button {
-  border-color: rgba(126, 249, 255, 0.3);
+  border-color: var(--line);
   background: transparent;
-  color: #e7e8ff;
-  font-family: "Space Grotesk", sans-serif;
+  color: var(--ink);
+  font-family: "Manrope", sans-serif;
 }
 .timeline-page-root .report-card .report-card-button:hover {
-  background: rgba(126, 249, 255, 0.1);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 .timeline-page-root .report-card .report-card-button.is-primary {
-  border-color: #7ef9ff;
-  background: #7ef9ff;
-  color: #05060f;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 .timeline-page-root .report-card .report-card-button.is-primary:hover {
-  background: #2f8fd1;
-  border-color: #2f8fd1;
-  color: #f2f8ff;
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: var(--ink);
 }
 .timeline-page-root .day-entry.is-today {
-  border-color: #7ef9ff;
-  box-shadow: 0 0 20px rgba(126, 249, 255, 0.2);
+  border-color: var(--accent);
 }
 .timeline-page-root .day-entry:hover {
-  border-color: #b088ff;
-  box-shadow: 0 0 16px rgba(176, 136, 255, 0.25);
+  border-color: var(--secondary);
 }
 .timeline-page-root .day-entry-header:hover {
-  background: rgba(176, 136, 255, 0.1);
+  background: color-mix(in srgb, var(--secondary) 10%, transparent);
 }
 .timeline-page-root .day-entry-details {
-  border-top-color: rgba(126, 249, 255, 0.15);
+  border-top-color: color-mix(in srgb, var(--accent) 15%, transparent);
 }
 .timeline-page-root .day-entry-date {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Manrope", sans-serif;
   font-size: 0.8rem;
   letter-spacing: 0.04em;
-  color: #7ef9ff;
+  color: var(--accent);
 }
 .timeline-page-root .day-entry-empty,
 .timeline-page-root .day-entry-note-preview,
 .timeline-page-root .note-time {
-  color: #a9acdf;
+  color: var(--muted);
 }
 .timeline-page-root .link-chip,
 .timeline-page-root .file-chip {
   background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(126, 249, 255, 0.25);
-  color: #dfe1ff;
+  border-color: var(--line);
+  color: var(--ink);
 }
 .timeline-page-root .file-chip-remove {
-  background: rgba(15, 16, 35, 0.9);
-  border-color: rgba(126, 249, 255, 0.3);
-  color: #9fa2d8;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border-color: var(--line);
+  color: var(--muted);
 }
 .timeline-page-root .file-chip-remove:hover {
-  background: rgba(255, 90, 120, 0.16);
-  border-color: rgba(255, 90, 120, 0.5);
-  color: #ff8fa3;
+  background: color-mix(in srgb, var(--tertiary) 16%, transparent);
+  border-color: color-mix(in srgb, var(--tertiary) 50%, transparent);
+  color: var(--tertiary);
 }
 .timeline-page-root .file-chip-remove-inline {
-  background: rgba(15, 16, 35, 0.9);
-  border-color: rgba(126, 249, 255, 0.3);
-  color: #9fa2d8;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border-color: var(--line);
+  color: var(--muted);
 }
 .timeline-page-root .file-chip-remove-inline:hover {
-  background: rgba(255, 90, 120, 0.16);
-  border-color: rgba(255, 90, 120, 0.5);
-  color: #ff8fa3;
+  background: color-mix(in srgb, var(--tertiary) 16%, transparent);
+  border-color: color-mix(in srgb, var(--tertiary) 50%, transparent);
+  color: var(--tertiary);
 }
 .timeline-page-root .day-entry-activity-text {
-  color: #dfe1ff;
-  background: rgba(126, 249, 255, 0.1);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 .timeline-page-root .day-entry-activity-item.is-assistant .day-entry-activity-text {
   background: rgba(255, 255, 255, 0.06);
 }
 .timeline-page-root .day-entry-expand-toggle {
-  background: rgba(15, 16, 35, 0.9);
-  border-color: rgba(126, 249, 255, 0.3);
-  color: #9fa2d8;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border-color: var(--line);
+  color: var(--muted);
 }
 .timeline-page-root .day-entry-expand-toggle:hover {
-  background: rgba(126, 249, 255, 0.12);
-  color: #7ef9ff;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
 }
 .timeline-page-root .day-entry-ai-badge {
-  background: rgba(126, 249, 255, 0.12);
-  color: #7ef9ff;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
 }
 .timeline-page-root .day-entry-activity-action {
-  background: rgba(15, 16, 35, 0.9);
-  border-color: rgba(126, 249, 255, 0.3);
-  color: #9fa2d8;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border-color: var(--line);
+  color: var(--muted);
 }
 .timeline-page-root .day-entry-activity-action:hover {
-  background: rgba(90, 169, 230, 0.16);
-  border-color: #5aa9e6;
-  color: #dfe1ff;
+  background: color-mix(in srgb, var(--secondary) 16%, transparent);
+  border-color: var(--secondary);
+  color: var(--ink);
 }
 .timeline-page-root .day-entry-activity-action.is-delete:hover {
-  background: rgba(255, 90, 120, 0.16);
-  border-color: rgba(255, 90, 120, 0.5);
-  color: #ff8fa3;
+  background: color-mix(in srgb, var(--tertiary) 16%, transparent);
+  border-color: color-mix(in srgb, var(--tertiary) 50%, transparent);
+  color: var(--tertiary);
 }
 .timeline-page-root .day-entry-activity-edit-input {
   background: rgba(255, 255, 255, 0.05);
-  border-color: #7ef9ff;
-  color: #e7e8ff;
+  border-color: var(--accent);
+  color: var(--ink);
 }
 .timeline-page-root .day-entry-labeled-field {
-  color: #9fa2d8;
-  font-family: "Rajdhani", sans-serif;
+  color: var(--muted);
+  font-family: "DM Sans", sans-serif;
 }
 .timeline-page-root .day-entry-labeled-field textarea {
   background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(126, 249, 255, 0.2);
-  color: #e7e8ff;
+  border-color: var(--line);
+  color: var(--ink);
 }
 .timeline-page-root .day-entry-upload-button {
   background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(126, 249, 255, 0.2);
-  color: #e7e8ff;
+  border-color: var(--line);
+  color: var(--ink);
 }
 .timeline-page-root .day-entry-upload-button:hover {
-  background: rgba(90, 169, 230, 0.16);
-  border-color: #5aa9e6;
-  box-shadow: 0 0 12px rgba(90, 169, 230, 0.35);
+  background: color-mix(in srgb, var(--secondary) 16%, transparent);
+  border-color: var(--secondary);
 }
 .timeline-page-root .day-entry-dropzone.is-dragover {
-  outline-color: #7ef9ff;
-  background: rgba(126, 249, 255, 0.08);
+  outline-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 .timeline-page-root .time-select-calendar {
   background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(126, 249, 255, 0.25);
-  color: #7ef9ff;
+  border-color: var(--line);
+  color: var(--accent);
 }
 .timeline-page-root .time-select-calendar-icon {
-  filter: drop-shadow(0 0 4px rgba(126, 249, 255, 0.6));
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 60%, transparent));
 }
 .timeline-page-root .time-select-item {
-  color: #9fa2d8;
-  font-family: "Rajdhani", sans-serif;
+  color: var(--muted);
+  font-family: "DM Sans", sans-serif;
   letter-spacing: 0.03em;
 }
 .timeline-page-root .time-select-item.is-active {
-  color: #7ef9ff;
-  text-shadow: 0 0 10px rgba(126, 249, 255, 0.6);
+  color: var(--accent);
 }
 .timeline-page-root .composer-text {
   background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(126, 249, 255, 0.2);
-  color: #e7e8ff;
-  font-family: "Rajdhani", sans-serif;
+  border-color: var(--line);
+  color: var(--ink);
+  font-family: "DM Sans", sans-serif;
 }
 .timeline-page-root .composer-text::placeholder {
-  color: #6d70a8;
+  color: var(--muted);
 }
 .timeline-page-root .composer-icon-button {
   background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(126, 249, 255, 0.2);
+  border-color: var(--line);
 }
 .timeline-page-root .composer-icon-button:hover {
-  background: rgba(90, 169, 230, 0.16);
-  border-color: #5aa9e6;
-  box-shadow: 0 0 12px rgba(90, 169, 230, 0.35);
+  background: color-mix(in srgb, var(--secondary) 16%, transparent);
+  border-color: var(--secondary);
 }
 .timeline-page-root .composer-submit {
-  background: #7ef9ff;
-  border-color: #7ef9ff;
-  color: #05060f;
-  font-family: "Space Grotesk", sans-serif;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-family: "Manrope", sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 .timeline-page-root .composer-submit::after {
-  border: 1px solid rgba(126, 249, 255, 0.35);
-  background: #0f1023;
-  color: #7ef9ff;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background: var(--surface-strong);
+  color: var(--accent);
 }
 .timeline-page-root .composer-submit:hover {
-  background: #2f8fd1;
-  border-color: #2f8fd1;
-  color: #f2f8ff;
-  box-shadow: 0 0 18px rgba(47, 143, 209, 0.55);
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: var(--ink);
 }
 .timeline-page-root .time-select-calendar:hover {
-  background: rgba(90, 169, 230, 0.16);
-  border-color: #5aa9e6;
-  box-shadow: 0 0 12px rgba(90, 169, 230, 0.35);
+  background: color-mix(in srgb, var(--secondary) 16%, transparent);
+  border-color: var(--secondary);
 }
 .timeline-page-root .composer-chip {
-  background: rgba(126, 249, 255, 0.12);
-  color: #dfe1ff;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--ink);
 }
 .timeline-page-root .composer-chip button {
-  color: #7ef9ff;
+  color: var(--accent);
 }
 .timeline-page-root .composer.is-dragover {
-  outline-color: #7ef9ff;
-  background: rgba(126, 249, 255, 0.08);
+  outline-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 /* Integrations page: one card per app, with Connect/Disconnect for its OAuth sign-in. */
@@ -2019,7 +1958,7 @@ body.reporting-body {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding: 18px 4vw 22px;
+  padding: 1.5rem 0 1.75rem;
 }
 .integrations-list {
   display: flex;
@@ -2036,13 +1975,12 @@ body.reporting-body {
   justify-content: space-between;
   gap: 16px;
   padding: 16px 18px;
-  border: 1px solid rgba(126, 249, 255, 0.2);
+  border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(21, 22, 46, 0.7);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
 }
 .integration-card.is-connected {
-  border-color: rgba(126, 249, 255, 0.45);
-  box-shadow: 0 0 18px rgba(126, 249, 255, 0.12);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 .integration-card-text {
   flex: 1 1 auto;
@@ -2053,13 +1991,13 @@ body.reporting-body {
   line-height: 1.4;
 }
 .integration-card-text strong {
-  color: #7ef9ff;
-  font-family: "Space Grotesk", sans-serif;
+  color: var(--ink);
+  font-family: "Manrope", sans-serif;
   letter-spacing: 0.03em;
 }
 .integration-card-text span {
-  color: #a9acdf;
-  font-family: "Rajdhani", sans-serif;
+  color: var(--muted);
+  font-family: "DM Sans", sans-serif;
 }
 /* Two classes so these win over the site-wide button styles (full width, space-between,
    margin-top, hover lift). */
@@ -2072,29 +2010,29 @@ body.reporting-body {
   white-space: nowrap;
   margin: 0;
   padding: 8px 16px;
-  border: 1px solid #7ef9ff;
-  border-radius: 999px;
-  background: #7ef9ff;
-  color: #05060f;
-  font-family: "Space Grotesk", sans-serif;
+  border: 1px solid var(--accent);
+  border-radius: 0.4375rem;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: "Manrope", sans-serif;
   font-size: 0.8rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
 }
 .integrations-page .integration-connect:hover {
-  background: #2f8fd1;
-  border-color: #2f8fd1;
-  color: #f2f8ff;
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: var(--ink);
   transform: none;
 }
 .integrations-page .integration-connect.is-secondary {
   background: transparent;
-  border-color: rgba(126, 249, 255, 0.3);
-  color: #e7e8ff;
+  border-color: var(--line);
+  color: var(--ink);
 }
 .integrations-page .integration-connect.is-secondary:hover {
-  background: rgba(126, 249, 255, 0.1);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 .integrations-page .integration-connect:disabled {
   opacity: 0.5;
@@ -2104,14 +2042,14 @@ body.reporting-body {
   max-width: 760px;
   margin: 0 0 14px;
   padding: 10px 14px;
-  border: 1px solid rgba(126, 249, 255, 0.45);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
   border-radius: 12px;
-  color: #7ef9ff;
-  font-family: "Rajdhani", sans-serif;
+  color: var(--accent);
+  font-family: "DM Sans", sans-serif;
 }
 .integrations-banner.is-error {
-  border-color: rgba(255, 128, 160, 0.55);
-  color: #ff9db5;
+  border-color: color-mix(in srgb, var(--tertiary) 55%, transparent);
+  color: var(--tertiary);
 }
 @media (max-width: 720px) {
   .integration-card {

@@ -11,7 +11,7 @@ import { DRIVE_SEARCH_TOOL, driveSearch } from "../mcp/drive_search.server";
 import { DRIVE_READ_FILE_TOOL, driveReadFile } from "../mcp/drive_read_file.server";
 import { getAccessToken, loadConnections, type Connection } from "../lib/connections.server";
 import { createUserClient, signedInUserId } from "../lib/supabase.server";
-import { INTEGRATIONS } from "../../components/integrations";
+import { INTEGRATIONS } from "../../helpers/integrations";
 import {
   guardRequest,
   json,
