@@ -3,23 +3,19 @@
     file_chunks table (schema_file_vectors.sql). Runs in the background after upload, with
     no signed-in user, so it uses Supabase's service role key. Never use that key in the
     AI's tools (src/ai/mcp/); they must go through the user's own token. */
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { embedTexts } from "./embeddings.server";
-import { extractPages, fileKind, words } from "./extract_text.server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { embedTexts } from "../lib/embeddings.server";
+import { chunkPages, extractPages, fileKind } from "../lib/extract_text.server";
+import { bearerToken, createAdminClient, createUserClient } from "../lib/supabase.server";
 import {
-  bearerToken,
-  createUserClient,
   isShortString,
   json,
   readJson,
   type HandlerOptions,
-} from "./openai.server";
+} from "../lib/http.server";
 
 const STORAGE_BUCKET = "report-attachments";
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
-// About half a page per chunk, overlapping so sentences at the edges aren't lost.
-const CHUNK_WORDS = 400;
-const CHUNK_OVERLAP_WORDS = 50;
 // Caps embedding cost for huge files (~1,000+ pages).
 const MAX_CHUNKS = 2000;
 const INSERT_BATCH_SIZE = 50;
@@ -62,16 +58,6 @@ export type ProcessStore = {
 export type ProcessResult =
   | { status: "ready"; pageCount: number; chunkCount: number }
   | { status: "unsupported" | "failed"; error: string };
-
-// Server-only Supabase client that bypasses Row Level Security. Only for processing.
-export function createAdminClient(): SupabaseClient {
-  const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceRoleKey) {
-    throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set on the server");
-  }
-  return createClient(url, serviceRoleKey, { auth: { persistSession: false } });
-}
 
 export function supabaseProcessStore(db: SupabaseClient): ProcessStore {
   return {
@@ -239,27 +225,4 @@ async function recordUpload(
   }
   console.error("[process_file] couldn't record upload", error);
   return null;
-}
-
-type Chunk = { content: string; pageStart: number | null; pageEnd: number | null };
-
-// Splits pages into overlapping chunks of about CHUNK_WORDS words, remembering which
-// pages each chunk came from so the AI can cite them.
-export function chunkPages(pages: string[], hasPageNumbers: boolean): Chunk[] {
-  const tagged = pages.flatMap((page, index) =>
-    words(page).map((word) => ({ word, page: index + 1 })),
-  );
-
-  const chunks: Chunk[] = [];
-  const step = CHUNK_WORDS - CHUNK_OVERLAP_WORDS;
-  for (let start = 0; start < tagged.length; start += step) {
-    const slice = tagged.slice(start, start + CHUNK_WORDS);
-    chunks.push({
-      content: slice.map((item) => item.word).join(" "),
-      pageStart: hasPageNumbers ? slice[0].page : null,
-      pageEnd: hasPageNumbers ? slice[slice.length - 1].page : null,
-    });
-    if (start + CHUNK_WORDS >= tagged.length) break;
-  }
-  return chunks;
 }

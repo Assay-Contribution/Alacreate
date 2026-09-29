@@ -6,8 +6,8 @@
     Usage: npm run index-messages
 
     Uses the service role key from .env.local, so it indexes every user's messages. */
-import { indexMessages, type MessageToIndex } from "../src/ai/index_messages.server";
-import { createAdminClient } from "../src/ai/process_file.server";
+import { indexMessages, type MessageToIndex } from "../src/ai/endpoints/index_messages.server";
+import { createAdminClient } from "../src/ai/lib/supabase.server";
 
 const BATCH_SIZE = 50;
 const db = createAdminClient();

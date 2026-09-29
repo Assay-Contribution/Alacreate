@@ -1,6 +1,13 @@
 /*  Server-side AI day summaries. Served at /api/summarize by api/summarize.ts on Vercel
     and by the Vite dev middleware (vite.config.ts) locally. */
-import { chat, guardRequest, json, readJson, stringList, type HandlerOptions } from "./openai.server";
+import { chat } from "../lib/openai.server";
+import {
+  guardRequest,
+  json,
+  readJson,
+  stringList,
+  type HandlerOptions,
+} from "../lib/http.server";
 
 const MAX_PROMPT_LENGTH = 8000;
 

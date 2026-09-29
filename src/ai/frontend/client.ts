@@ -50,7 +50,7 @@ export async function streamAi(
   return text || null;
 }
 
-async function authHeaders(): Promise<Record<string, string>> {
+export async function authHeaders(): Promise<Record<string, string>> {
   if (!supabaseClient) return {};
   const { data } = await supabaseClient.auth.getSession();
   const token = data.session?.access_token;

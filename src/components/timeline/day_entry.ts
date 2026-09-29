@@ -5,7 +5,7 @@
 */
 import { escapeHtml, fileSizeLabel, formatFullDayLabel } from "./format";
 import { summarizeDay } from "../../ai/frontend/summarize";
-import { shortenAiReply } from "../../ai/shorten_ai_reply";
+import { shortenAiReply } from "../../ai/lib/shorten_ai_reply";
 import { renderReportCard } from "./report_card";
 import { userNotes, type DayEntry, type FileAttachment, type NoteEntry } from "./types";
 

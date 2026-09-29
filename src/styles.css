@@ -1827,3 +1827,112 @@ body.reporting-body {
   outline-color: #7ef9ff;
   background: rgba(126, 249, 255, 0.08);
 }
+
+/* Integrations page: one card per app, with Connect/Disconnect for its OAuth sign-in. */
+.integrations-page {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 4vw 22px;
+}
+.integrations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 760px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.integration-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid rgba(126, 249, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(21, 22, 46, 0.7);
+}
+.integration-card.is-connected {
+  border-color: rgba(126, 249, 255, 0.45);
+  box-shadow: 0 0 18px rgba(126, 249, 255, 0.12);
+}
+.integration-card-text {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  line-height: 1.4;
+}
+.integration-card-text strong {
+  color: #7ef9ff;
+  font-family: "Space Grotesk", sans-serif;
+  letter-spacing: 0.03em;
+}
+.integration-card-text span {
+  color: #a9acdf;
+  font-family: "Rajdhani", sans-serif;
+}
+/* Two classes so these win over the site-wide button styles (full width, space-between,
+   margin-top, hover lift). */
+.integrations-page .integration-connect {
+  flex: 0 0 auto;
+  display: inline-flex;
+  justify-content: center;
+  width: auto;
+  min-width: 120px;
+  white-space: nowrap;
+  margin: 0;
+  padding: 8px 16px;
+  border: 1px solid #7ef9ff;
+  border-radius: 999px;
+  background: #7ef9ff;
+  color: #05060f;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+.integrations-page .integration-connect:hover {
+  background: #2f8fd1;
+  border-color: #2f8fd1;
+  color: #f2f8ff;
+  transform: none;
+}
+.integrations-page .integration-connect.is-secondary {
+  background: transparent;
+  border-color: rgba(126, 249, 255, 0.3);
+  color: #e7e8ff;
+}
+.integrations-page .integration-connect.is-secondary:hover {
+  background: rgba(126, 249, 255, 0.1);
+}
+.integrations-page .integration-connect:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.integrations-banner {
+  max-width: 760px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 1px solid rgba(126, 249, 255, 0.45);
+  border-radius: 12px;
+  color: #7ef9ff;
+  font-family: "Rajdhani", sans-serif;
+}
+.integrations-banner.is-error {
+  border-color: rgba(255, 128, 160, 0.55);
+  color: #ff9db5;
+}
+@media (max-width: 720px) {
+  .integration-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .integrations-page .integration-connect {
+    width: 100%;
+  }
+}

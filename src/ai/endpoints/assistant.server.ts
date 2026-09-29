@@ -3,21 +3,27 @@
     user's most recent notes; since most notes are just notes, the model stays silent
     unless it is asked directly. */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { LIST_FILES_TOOL, listFiles, supabaseFileSource } from "./mcp/list_files.server";
-import { QUERY_FILE_TOOL, queryFile } from "./mcp/query_file.server";
-import { GET_MESSAGES_TOOL, getMessages, supabaseMessageSource } from "./mcp/get_messages.server";
-import { QUERY_HISTORY_TOOL, queryHistory } from "./mcp/query_history.server";
+import { LIST_FILES_TOOL, listFiles, supabaseFileSource } from "../mcp/list_files.server";
+import { QUERY_FILE_TOOL, queryFile } from "../mcp/query_file.server";
+import { GET_MESSAGES_TOOL, getMessages, supabaseMessageSource } from "../mcp/get_messages.server";
+import { QUERY_HISTORY_TOOL, queryHistory } from "../mcp/query_history.server";
+import { DRIVE_SEARCH_TOOL, driveSearch } from "../mcp/drive_search.server";
+import { DRIVE_READ_FILE_TOOL, driveReadFile } from "../mcp/drive_read_file.server";
+import { getAccessToken, loadConnections, type Connection } from "../lib/connections.server";
+import { createUserClient, signedInUserId } from "../lib/supabase.server";
+import { INTEGRATIONS } from "../../components/integrations";
 import {
-  createUserClient,
   guardRequest,
   json,
   readJson,
-  type ChatMessage,
   type HandlerOptions,
+} from "../lib/http.server";
+import {
+  type ChatMessage,
   streamChatWithTools,
   type ToolDefinition,
   type ToolRunner,
-} from "./openai.server";
+} from "../lib/openai.server";
 
 const MAX_MESSAGES = 10;
 // Longer messages are cut down rather than rejected: rejecting would make the AI go
@@ -57,6 +63,20 @@ const TOOLS_PROMPT =
   "day something was said. You only see the last few notes of today automatically; use " +
   "these tools for anything earlier.";
 
+const DRIVE_PROMPT =
+  "You can also search and read the user's Google Drive. drive_search finds files by " +
+  "keywords (short words likely to appear in the file, not a question); drive_read_file " +
+  "reads one file, returning the sections that best match a query. To answer a question " +
+  "about their documents, search with a few keywords, pick the most likely file, then read " +
+  "it with a focused query. If nothing matches, try different keywords before giving up. " +
+  "Mention which file the answer came from.";
+
+// Apps whose tools the AI has so far, by provider id. Connected apps not listed here are
+// mentioned in the prompt, but the AI can't use them yet.
+const APP_TOOLS: Record<string, { tools: ToolDefinition[]; prompt: string }> = {
+  google: { tools: [DRIVE_SEARCH_TOOL, DRIVE_READ_FILE_TOOL], prompt: DRIVE_PROMPT },
+};
+
 const NO_TOOLS_PROMPT =
   "You can't see the user's files or past messages right now because they aren't signed " +
   "in; say so if asked.";
@@ -76,17 +96,24 @@ export async function handleAssistant(
 
   // Tools run as the signed-in user, so they can only ever see that user's files.
   const userDb = createUserClient(request);
+  const userId = userDb ? await signedInUserId(request) : null;
+  // Tools for connected apps are only offered while the connection works.
+  const connections = userId ? await loadConnections(userId) : [];
+  const appTools = connections
+    .filter((connection) => connection.working)
+    .flatMap((connection) => APP_TOOLS[connection.provider]?.tools ?? []);
   const tools: ToolDefinition[] = userDb
     ? [
         LIST_FILES_TOOL,
         QUERY_FILE_TOOL,
         GET_MESSAGES_TOOL,
         QUERY_HISTORY_TOOL,
+        ...appTools,
       ]
     : [];
   const system =
     `${BASE_PROMPT}\n\nToday is ${today} (the user's time zone is ${timeZone}).\n\n` +
-    (userDb ? TOOLS_PROMPT : NO_TOOLS_PROMPT);
+    (userDb ? `${TOOLS_PROMPT}\n\n${connectedAppsPrompt(connections)}` : NO_TOOLS_PROMPT);
 
   const prompt = buildPrompt(history);
   const log = options.debug ? (line: string) => console.log(`[assistant] ${line}`) : undefined;
@@ -94,7 +121,9 @@ export async function handleAssistant(
   const deltas = streamChatWithTools(
     [{ role: "system", content: system }, prompt],
     tools,
-    userDb ? toolRunner(userDb, timeZone) : async () => "No tools are available.",
+    userDb
+      ? toolRunner(userDb, timeZone, userId, new Set(tools.map((tool) => tool.function.name)))
+      : async () => "No tools are available.",
     500,
     log,
   );
@@ -161,8 +190,77 @@ function buildPrompt(history: ChatMessage[]): ChatMessage {
   };
 }
 
-function toolRunner(db: SupabaseClient, timeZone: string): ToolRunner {
+// Which apps are connected (and usable) and which aren't, so the AI can say what it can
+// reach and point the user to the Integrations page for the rest.
+function connectedAppsPrompt(connections: Connection[]): string {
+  const usable: string[] = [];
+  const connectedOnly: string[] = [];
+  const broken: string[] = [];
+  const notConnected: string[] = [];
+  for (const integration of INTEGRATIONS) {
+    const connection = connections.find((c) => c.provider === integration.provider);
+    const label = connection?.accountLabel
+      ? `${integration.name} (${connection.accountLabel})`
+      : integration.name;
+    if (!connection) notConnected.push(integration.name);
+    else if (!connection.working) broken.push(label);
+    else if (APP_TOOLS[integration.provider]) usable.push(label);
+    else connectedOnly.push(label);
+  }
+  const lines = [
+    usable.length
+      ? `Connected apps you can use: ${usable.join(", ")}.`
+      : "The user hasn't connected any apps you can use.",
+  ];
+  if (connectedOnly.length) {
+    lines.push(`Connected, but you have no tools for them yet: ${connectedOnly.join(", ")}.`);
+  }
+  if (broken.length) {
+    lines.push(
+      `Connected but no longer working: ${broken.join(", ")}. If asked about these, say the ` +
+        "user needs to reconnect them on the Integrations page.",
+    );
+  }
+  if (notConnected.length) {
+    lines.push(
+      `Not connected: ${notConnected.join(", ")}. If asked about these, say the user can ` +
+        "connect them on the Integrations page.",
+    );
+  }
+  const appPrompts = connections
+    .filter((connection) => connection.working)
+    .map((connection) => APP_TOOLS[connection.provider]?.prompt)
+    .filter((prompt): prompt is string => Boolean(prompt));
+  return [...lines, ...appPrompts].join("\n");
+}
+
+function toolRunner(
+  db: SupabaseClient,
+  timeZone: string,
+  userId: string | null,
+  offered: Set<string>,
+): ToolRunner {
   return async (name, args) => {
+    // Only run tools that were offered for this request, e.g. never Drive tools for a user
+    // without a working Google Drive connection.
+    if (!offered.has(name)) return `The ${name} tool isn't available.`;
+    if ((name === "drive_search" || name === "drive_read_file") && userId) {
+      const access = await getAccessToken(userId, "google");
+      if ("error" in access) return access.error;
+      if (name === "drive_search") {
+        return driveSearch(access.token, {
+          keywords: Array.isArray(args.keywords) ? args.keywords.map(String) : [String(args.keywords ?? "")],
+          modifiedAfter: typeof args.modified_after === "string" ? args.modified_after : undefined,
+          type: typeof args.type === "string" ? args.type : undefined,
+          limit: typeof args.limit === "number" ? args.limit : undefined,
+        });
+      }
+      return driveReadFile(access.token, {
+        fileId: String(args.file_id ?? ""),
+        query: typeof args.query === "string" ? args.query : undefined,
+        limit: typeof args.limit === "number" ? args.limit : undefined,
+      });
+    }
     if (name === "list_files") {
       return listFiles(supabaseFileSource(db), { date: String(args.date ?? ""), timeZone });
     }

@@ -8,13 +8,13 @@
       npm run process-file -- ECE3640 "question"   process it (if needed), then search it
 
     Uses the service role key from .env.local, so it can see every user's files. */
-import { embedTexts } from "../src/ai/embeddings.server";
+import { embedTexts } from "../src/ai/lib/embeddings.server";
+import { createAdminClient } from "../src/ai/lib/supabase.server";
 import {
-  createAdminClient,
   processFile,
   supabaseProcessStore,
   type FileRecord,
-} from "../src/ai/process_file.server";
+} from "../src/ai/endpoints/process_file.server";
 
 type UploadedFile = { name: string; path: string; size: number };
 

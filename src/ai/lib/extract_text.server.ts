@@ -1,8 +1,13 @@
-/*  Turns an uploaded file into text, page by page. Shared by list_files (previews) and
-    process_file (embedding). Supported for now: PDFs and plain-text files. */
+/*  Turns a file into text, page by page, and splits text into chunks for embedding.
+    Shared by list_files (previews), process_file (embedding uploads), and drive_read_file.
+    Supported for now: PDFs and plain-text files. */
 import { getDocumentProxy } from "unpdf";
 
 export type FileKind = "pdf" | "text" | "image" | "other";
+
+// About half a page per chunk, overlapping so sentences at the edges aren't lost.
+const CHUNK_WORDS = 400;
+const CHUNK_OVERLAP_WORDS = 50;
 
 const TEXT_EXTENSIONS = ["txt", "md", "csv", "json", "log"];
 const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp"];
@@ -43,6 +48,29 @@ export async function extractPages(
 // Words that contain a letter or number, so bullets and dashes don't count as words.
 export function words(text: string): string[] {
   return text.split(/\s+/).filter((word) => /[\p{L}\p{N}]/u.test(word));
+}
+
+export type Chunk = { content: string; pageStart: number | null; pageEnd: number | null };
+
+// Splits pages into overlapping chunks of about CHUNK_WORDS words, remembering which
+// pages each chunk came from so the AI can cite them.
+export function chunkPages(pages: string[], hasPageNumbers: boolean): Chunk[] {
+  const tagged = pages.flatMap((page, index) =>
+    words(page).map((word) => ({ word, page: index + 1 })),
+  );
+
+  const chunks: Chunk[] = [];
+  const step = CHUNK_WORDS - CHUNK_OVERLAP_WORDS;
+  for (let start = 0; start < tagged.length; start += step) {
+    const slice = tagged.slice(start, start + CHUNK_WORDS);
+    chunks.push({
+      content: slice.map((item) => item.word).join(" "),
+      pageStart: hasPageNumbers ? slice[0].page : null,
+      pageEnd: hasPageNumbers ? slice[slice.length - 1].page : null,
+    });
+    if (start + CHUNK_WORDS >= tagged.length) break;
+  }
+  return chunks;
 }
 
 function normalize(text: string): string {
