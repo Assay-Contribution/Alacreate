@@ -2,7 +2,7 @@
     the AI's replies, with times. The AI's replies can be shortened to their first two
     lines to save tokens. Server-only. */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { shortenAiReply } from "../shorten_ai_reply";
+import { shortenAiReply } from "../../helpers/shorten_ai_reply";
 
 // Safety limit so an unusually long day can't flood the AI (~12,000 tokens at ~4
 // characters per token). Normal days are far below this.

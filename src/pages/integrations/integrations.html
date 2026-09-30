@@ -1,0 +1,56 @@
+<!doctype html>
+<!--  Integrations page, served at /integrations.html: the site nav and heading.
+      integrations.ts builds the list of connectable apps inside #integrationsPageRoot.
+      (Each page lives in src/pages/<name>/ but is served at /<name>.html; see pageFolders
+      in vite.config.ts.)
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Connect the apps your AI assistant can work with."
+    />
+    <title>Integrations | Contribute</title>
+    <link rel="icon" type="image/png" href="/images/A_icon.png" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body class="reporting-body">
+    <main class="timeline-page">
+      <nav class="site-nav" aria-label="Main navigation">
+        <a class="wordmark" href="/"
+          ><img src="/images/Logo_white.png" alt="Contribute"
+        /></a>
+        <button
+          class="menu-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="site-menu"
+        >
+          <span class="menu-label">Menu</span>
+          <span class="menu-icon" aria-hidden="true"><i></i><i></i></span>
+        </button>
+        <div class="site-menu" id="site-menu">
+          <a class="nav-link" href="/">Manifesto</a>
+          <a class="nav-link" href="/reporting.html">Reporting</a>
+          <a class="nav-link active" href="/integrations.html">Integrations</a>
+          <a class="nav-link" href="/signup.html"
+            >Sign up <span aria-hidden="true">↗</span></a
+          >
+        </div>
+      </nav>
+
+      <header class="timeline-page-header">
+        <p class="eyebrow">Connect your tools</p>
+        <h1>Add <em>Integrations</em></h1>
+        <p class="eyebrow">Give the AI assistant used for the reporting access to the data inside these services</p>
+      </header>
+
+      <div id="integrationsPageRoot"></div>
+    </main>
+
+    <script type="module" src="/src/pages/integrations/integrations.ts"></script>
+    <script type="module" src="/src/components/nav/navigation_bar.ts"></script>
+  </body>
+</html>

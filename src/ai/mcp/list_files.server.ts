@@ -4,7 +4,12 @@
     Supported previews for now: PDFs and text files. Images (screenshots) are listed
     without a preview. */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { extractPages, fileKind, words, type FileKind } from "../extract_text.server";
+import {
+  extractPages,
+  fileKind,
+  words,
+  type FileKind,
+} from "../lib/extract_text.server";
 
 const STORAGE_BUCKET = "report-attachments";
 const CONTEXT_WINDOW_MS = 10 * 60 * 1000;
