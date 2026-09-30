@@ -1,8 +1,8 @@
 /*  Box: browse the files and folders in the user's Box account.
     Redirect URI to register in the Box Developer Console: <origin>/auth/box/callback
 */
-import { env, exchangeCode, getJson } from "../oauth";
-import type { Integration } from "../../types/integrations";
+import { env, exchangeCode, getJson } from "../oauth.js";
+import type { Integration } from "../../types/integrations.js";
 
 export const box: Integration = {
   provider: "box",

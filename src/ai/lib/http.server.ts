@@ -1,6 +1,6 @@
 /*  Helpers every API endpoint uses: the handler signature, the common request checks,
     reading and validating the request body, and JSON responses. Server-only. */
-import { isSignedIn } from "./supabase.server";
+import { isSignedIn } from "./supabase.server.js";
 
 const MAX_ITEMS = 50;
 const MAX_ITEM_LENGTH = 2000;

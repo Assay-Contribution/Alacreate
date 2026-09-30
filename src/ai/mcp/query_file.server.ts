@@ -3,7 +3,7 @@
     `db` must be a Supabase client created with the signed-in user's token, so Row Level
     Security keeps the search inside that user's own files, whatever id the AI passes. */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { embedTexts } from "../lib/embeddings.server";
+import { embedTexts } from "../lib/embeddings.server.js";
 
 const DEFAULT_RESULTS = 5;
 const MAX_RESULTS = 10;

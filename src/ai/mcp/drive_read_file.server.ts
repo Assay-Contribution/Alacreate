@@ -4,9 +4,9 @@
     a query, it returns the start of the file. `accessToken` must be the signed-in user's
     own Google token (from lib/connections.server.ts), so only their files can be read.
     Supported: Google Docs, Slides, and Sheets (first sheet), PDFs, and plain-text files. */
-import { embedTexts } from "../lib/embeddings.server";
-import { chunkPages, extractPages, words, type Chunk } from "../lib/extract_text.server";
-import { DRIVE_TYPE_NAMES, driveError } from "./drive_search.server";
+import { embedTexts } from "../lib/embeddings.server.js";
+import { chunkPages, extractPages, words, type Chunk } from "../lib/extract_text.server.js";
+import { DRIVE_TYPE_NAMES, driveError } from "./drive_search.server.js";
 
 const DEFAULT_RESULTS = 4;
 const MAX_RESULTS = 8;

@@ -4,7 +4,7 @@
     nothing secret is in the browser bundle even though the Integrations page imports the
     app configs for their names.
 */
-import type { TokenSet } from "../types/integrations";
+import type { TokenSet } from "../types/integrations.js";
 
 export function env(name: string): string {
   const value = process.env[name];

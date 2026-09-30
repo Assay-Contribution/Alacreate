@@ -13,15 +13,15 @@
       { type: "error", message }
     Everything runs as the signed-in user, so Row Level Security limits it to their data. */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getMessages } from "../mcp/get_messages.server";
-import { bearerToken, createUserClient } from "../lib/supabase.server";
+import { getMessages } from "../mcp/get_messages.server.js";
+import { bearerToken, createUserClient } from "../lib/supabase.server.js";
 import {
   chat,
   CHAT_MODEL,
   REPORT_MODEL,
   streamChatWithTools,
-} from "../lib/openai.server";
-import { json, readJson } from "../lib/http.server";
+} from "../lib/openai.server.js";
+import { json, readJson } from "../lib/http.server.js";
 
 // Sections of a document read for its brief: the opening, plus samples spread through
 // the rest so long documents are represented without reading all of them.

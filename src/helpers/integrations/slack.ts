@@ -1,8 +1,8 @@
 /*  Slack: installs the app into a workspace to list public channels and post messages.
     Redirect URL to register at api.slack.com/apps: <origin>/auth/slack/callback
 */
-import { env, exchangeCode, getJson } from "../oauth";
-import type { Integration } from "../../types/integrations";
+import { env, exchangeCode, getJson } from "../oauth.js";
+import type { Integration } from "../../types/integrations.js";
 
 export const slack: Integration = {
   provider: "slack",

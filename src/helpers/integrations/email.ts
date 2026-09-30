@@ -5,8 +5,8 @@
     consent screen. Google treats that scope as restricted: while the app is in Testing mode,
     only listed test users can connect, and publishing it needs Google's security review.
 */
-import { env, exchangeCode, getJson, refreshGoogleToken } from "../oauth";
-import type { Integration } from "../../types/integrations";
+import { env, exchangeCode, getJson, refreshGoogleToken } from "../oauth.js";
+import type { Integration } from "../../types/integrations.js";
 
 export const email: Integration = {
   provider: "gmail",

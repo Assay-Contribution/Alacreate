@@ -9,7 +9,7 @@ import {
   fileKind,
   words,
   type FileKind,
-} from "../lib/extract_text.server";
+} from "../lib/extract_text.server.js";
 
 const STORAGE_BUCKET = "report-attachments";
 const CONTEXT_WINDOW_MS = 10 * 60 * 1000;
