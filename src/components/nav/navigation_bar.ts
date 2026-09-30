@@ -29,3 +29,44 @@ if (menuToggle && siteMenu) {
     if (event.key === "Escape") closeMenu();
   });
 }
+
+// Light/dark switch. A script in each page's <head> applies the theme early (the saved
+// choice, or the system setting if there isn't one); this keeps the button's label in step,
+// saves new choices, and follows system changes until the visitor picks one.
+const themeToggle = document.querySelector<HTMLButtonElement>(".theme-toggle");
+
+if (themeToggle) {
+  const root = document.documentElement;
+  const label = themeToggle.querySelector(".theme-toggle-label");
+
+  const showTheme = (isLight: boolean) => {
+    if (isLight) root.dataset.theme = "light";
+    else delete root.dataset.theme;
+    const next = isLight ? "Dark mode" : "Light mode";
+    themeToggle.setAttribute("aria-label", `Switch to ${next.toLowerCase()}`);
+    if (label) label.textContent = next;
+  };
+
+  showTheme(root.dataset.theme === "light");
+
+  const systemLight = window.matchMedia("(prefers-color-scheme: light)");
+  systemLight.addEventListener("change", (event) => {
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem("theme");
+    } catch {
+      // Storage blocked: nothing saved, so follow the system.
+    }
+    if (!saved) showTheme(event.matches);
+  });
+
+  themeToggle.addEventListener("click", () => {
+    const isLight = root.dataset.theme !== "light";
+    showTheme(isLight);
+    try {
+      localStorage.setItem("theme", isLight ? "light" : "dark");
+    } catch {
+      // Storage can be blocked (e.g. private browsing); the theme still applies for this page.
+    }
+  });
+}
