@@ -11,9 +11,9 @@
     rewrites /auth/<provider>/callback to the latter), and by the Vite dev middleware locally. */
 
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { json, readJson } from "../lib/http.server";
-import { createAdminClient, signedInUserId } from "../lib/supabase.server";
-import { findIntegration, type Integration } from "../../helpers/integrations";
+import { json, readJson } from "../lib/http.server.js";
+import { createAdminClient, signedInUserId } from "../lib/supabase.server.js";
+import { findIntegration, type Integration } from "../../helpers/integrations/index.js";
 
 const STATE_COOKIE = "oauth_state";
 const STATE_TTL_SECONDS = 10 * 60;

@@ -3,27 +3,27 @@
     user's most recent notes; since most notes are just notes, the model stays silent
     unless it is asked directly. */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { LIST_FILES_TOOL, listFiles, supabaseFileSource } from "../mcp/list_files.server";
-import { QUERY_FILE_TOOL, queryFile } from "../mcp/query_file.server";
-import { GET_MESSAGES_TOOL, getMessages, supabaseMessageSource } from "../mcp/get_messages.server";
-import { QUERY_HISTORY_TOOL, queryHistory } from "../mcp/query_history.server";
-import { DRIVE_SEARCH_TOOL, driveSearch } from "../mcp/drive_search.server";
-import { DRIVE_READ_FILE_TOOL, driveReadFile } from "../mcp/drive_read_file.server";
-import { getAccessToken, loadConnections, type Connection } from "../lib/connections.server";
-import { createUserClient, signedInUserId } from "../lib/supabase.server";
-import { INTEGRATIONS } from "../../helpers/integrations";
+import { LIST_FILES_TOOL, listFiles, supabaseFileSource } from "../mcp/list_files.server.js";
+import { QUERY_FILE_TOOL, queryFile } from "../mcp/query_file.server.js";
+import { GET_MESSAGES_TOOL, getMessages, supabaseMessageSource } from "../mcp/get_messages.server.js";
+import { QUERY_HISTORY_TOOL, queryHistory } from "../mcp/query_history.server.js";
+import { DRIVE_SEARCH_TOOL, driveSearch } from "../mcp/drive_search.server.js";
+import { DRIVE_READ_FILE_TOOL, driveReadFile } from "../mcp/drive_read_file.server.js";
+import { getAccessToken, loadConnections, type Connection } from "../lib/connections.server.js";
+import { createUserClient, signedInUserId } from "../lib/supabase.server.js";
+import { INTEGRATIONS } from "../../helpers/integrations/index.js";
 import {
   guardRequest,
   json,
   readJson,
   type HandlerOptions,
-} from "../lib/http.server";
+} from "../lib/http.server.js";
 import {
   type ChatMessage,
   streamChatWithTools,
   type ToolDefinition,
   type ToolRunner,
-} from "../lib/openai.server";
+} from "../lib/openai.server.js";
 
 const MAX_MESSAGES = 10;
 // Longer messages are cut down rather than rejected: rejecting would make the AI go

@@ -1,8 +1,8 @@
 /*  Google Drive: read-only Drive access plus the user's Google profile and email.
     Redirect URI to register in Google Cloud Console: <origin>/auth/google/callback
 */
-import { env, exchangeCode, getJson, refreshGoogleToken } from "../oauth";
-import type { Integration } from "../../types/integrations";
+import { env, exchangeCode, getJson, refreshGoogleToken } from "../oauth.js";
+import type { Integration } from "../../types/integrations.js";
 
 export const googleDrive: Integration = {
   provider: "google",

@@ -5,10 +5,10 @@
     role key (users can only read and delete their rows), with user_id always taken from the
     verified login token. */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { embedTexts } from "../lib/embeddings.server";
-import { bearerToken, createUserClient } from "../lib/supabase.server";
-import { json, readJson } from "../lib/http.server";
-import { createAdminClient } from "../lib/supabase.server";
+import { embedTexts } from "../lib/embeddings.server.js";
+import { bearerToken, createUserClient } from "../lib/supabase.server.js";
+import { json, readJson } from "../lib/http.server.js";
+import { createAdminClient } from "../lib/supabase.server.js";
 
 const MAX_MESSAGES_PER_REQUEST = 50;
 // Well under the embedding model's input limit; messages are rarely this long.

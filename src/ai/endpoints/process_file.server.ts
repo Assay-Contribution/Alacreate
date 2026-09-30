@@ -4,15 +4,15 @@
     no signed-in user, so it uses Supabase's service role key. Never use that key in the
     AI's tools (src/ai/mcp/); they must go through the user's own token. */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { embedTexts } from "../lib/embeddings.server";
-import { chunkPages, extractPages, fileKind } from "../lib/extract_text.server";
-import { bearerToken, createAdminClient, createUserClient } from "../lib/supabase.server";
+import { embedTexts } from "../lib/embeddings.server.js";
+import { chunkPages, extractPages, fileKind } from "../lib/extract_text.server.js";
+import { bearerToken, createAdminClient, createUserClient } from "../lib/supabase.server.js";
 import {
   isShortString,
   json,
   readJson,
   type HandlerOptions,
-} from "../lib/http.server";
+} from "../lib/http.server.js";
 
 const STORAGE_BUCKET = "report-attachments";
 const MAX_FILE_BYTES = 50 * 1024 * 1024;

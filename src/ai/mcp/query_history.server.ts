@@ -3,7 +3,7 @@
     a Supabase client created with the signed-in user's token, so Row Level Security keeps
     results to that user's messages. Token counts are estimated at ~4 characters per token. */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { embedTexts } from "../lib/embeddings.server";
+import { embedTexts } from "../lib/embeddings.server.js";
 
 const DEFAULT_MAX_TOKENS = 1500;
 const MAX_MAX_TOKENS = 4000;

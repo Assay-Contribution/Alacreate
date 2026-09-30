@@ -3,8 +3,8 @@
     GroupMe always redirects to that registered URL (no redirect_uri parameter), sends the
     access token straight back (no code exchange or client secret), and has no state parameter.
 */
-import { getJson } from "../oauth";
-import type { Integration } from "../../types/integrations";
+import { getJson } from "../oauth.js";
+import type { Integration } from "../../types/integrations.js";
 
 export const groupme: Integration = {
   provider: "groupme",
