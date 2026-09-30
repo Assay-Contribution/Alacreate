@@ -15,13 +15,31 @@
     <title>Contribute's Manifesto</title>
     <link rel="icon" type="image/png" href="/images/A_icon.png" />
     <link rel="stylesheet" href="/src/styles.css" />
+    <!-- Applies the light/dark theme before the page draws, so it doesn't flash: the saved
+         choice if there is one, otherwise the visitor's system setting. -->
+    <script>
+      try {
+        var theme = localStorage.getItem("theme");
+      } catch {}
+      if (
+        theme
+          ? theme === "light"
+          : matchMedia("(prefers-color-scheme: light)").matches
+      )
+        document.documentElement.dataset.theme = "light";
+    </script>
   </head>
   <body>
     <main>
       <nav class="site-nav" aria-label="Main navigation">
-        z
         <a class="wordmark" href="/"
-          ><img src="/images/Logo_white.png" alt="Contribute"
+          ><img
+            class="logo-dark"
+            src="/images/Logo_white.png"
+            alt="Contribute" /><img
+            class="logo-light"
+            src="/images/Logo.png"
+            alt="Contribute"
         /></a>
         <button
           class="menu-toggle"
@@ -39,6 +57,43 @@
           <a class="nav-link" href="/signup.html"
             >Sign up <span aria-hidden="true">↗</span></a
           >
+          <button
+            class="theme-toggle"
+            type="button"
+            aria-label="Switch to light mode"
+          >
+            <svg
+              class="icon-sun"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="4" />
+              <path
+                d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+              />
+            </svg>
+            <svg
+              class="icon-moon"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+            <span class="theme-toggle-label">Light mode</span>
+          </button>
         </div>
       </nav>
 
